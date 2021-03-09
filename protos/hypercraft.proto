@@ -1,5 +1,38 @@
 syntax = "proto3";
 
 message ControlMessage {
+    Beacon beacon = 1;
+    Ping ping = 2;
+    Leave leave = 3;
+    Kill kill = 4;
+}
 
+message PhysicalAddress {
+    string ip = 1;
+    int32 port = 2;
+}
+
+message AddressPair {
+    PhysicalAddress physical_address = 1;
+    uint32 logical_address = 2;
+}
+
+message Beacon {
+    AddressPair address = 1;
+    uint64 seq_no = 2;
+}
+
+message Ping {
+    PhysicalAddress sender = 1;
+    PhysicalAddress receiver = 2;
+    PhysicalAddress hroot = 3;
+    uint64 seq_no = 4;
+}
+
+message Leave {
+    PhysicalAddress leaver = 1;
+}
+
+message Kill {
+    PhysicalAddress killed = 1;
 }
