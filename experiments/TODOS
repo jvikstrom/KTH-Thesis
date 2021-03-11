@@ -1,0 +1,6 @@
+* Look at the other datasets discussed during meeting (exploratory).
+* Implement Gossip learning or BrainTorrent and benchmark against that.
+* Benchmark under different node failures and stuff like that (also pick out 50/90/95/99th percentile models)
+* Test running against different data biases.
+* Implement FedAdagrad/FedYogi or FedAdam: https://arxiv.org/pdf/2003.00295v3.pdf  --> Maybe not in the first hand
+

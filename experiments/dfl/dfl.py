@@ -133,7 +133,7 @@ if __name__ == "__main__":
             #            tf.keras.layers.Dense(256, activation='relu', input_shape=(784,)),
 #            tf.keras.layers.Dense(10),
         ])
-        model.compile(optimizer=tf.optimizers.Adam(0.0001),
+        model.compile(optimizer=tf.optimizers.SGD(0.001),
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
         return model
