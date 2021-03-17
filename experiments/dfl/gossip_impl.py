@@ -78,7 +78,7 @@ class ExchangeGossip(Trainer):
                 #    continue
                 nxt = self.guider.next(client_idx)
                 self.recv_model(self.clients[client_idx], self.clients[nxt], batches=batches)
-            if i % 50 == 0 and i != 0:
+            if i % 100 == 0 and i != 0:
                 self.eval_train(i)
             self.eval_test(i)
             # a_weights = self.clients[0].model.get_weights()
