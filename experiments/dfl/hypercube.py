@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
 from tqdm import tqdm
-from client import Client, combine
+from client import Client, combine, Guider
 from train import Trainer
 
 
@@ -41,3 +41,17 @@ class Hypercube(Trainer):
             #a_weights = self.clients[0].model.get_weights()
             #for a_weight in a_weights:
             #    print(f"mean:{a_weight.mean()}, max:{a_weight.max()}, min:{a_weight.min()}, std:{a_weight.std()}")
+
+
+class HamiltonCycleGuider(Guider):
+    def __init__(self, clients: List[Client]):
+        Guider.__init__(self, clients)
+        self.round = [0 for _ in self.clients]
+
+    def next(self, client_idx: int) -> int:
+        if self.round[client_idx] % 2 == client_idx % 2:
+            add = 1
+        else:
+            add = -1
+        self.round[client_idx] += 1
+        return (client_idx + add) % len(self.clients)

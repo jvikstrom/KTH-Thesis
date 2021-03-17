@@ -104,8 +104,8 @@ def run_emnist_fls(data_dir, name, N, learning_rate, batches=1, iterations=100):
         print(f"Round {i} ::: loss: {loss}, accuracy: {accuracy}")
         metrics.append((loss, accuracy))
 
-        print(f"Writing: {len(df)} records to {name}")
-        storage.append(data_dir, name+".csv", df)
+    print(f"Writing: {len(df)} records to {name}")
+    storage.append(data_dir, name+".csv", df)
 
 
 if __name__ == "__main__":
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     batches = 4
     learning_rate = 0.001
     data_dir = "./data"
-    run_emnist(data_dir, "exchange-gossip", N, ExchangeGossip, learning_rate=learning_rate, batches=batches, iterations=iterations)
-    run_emnist(data_dir, "agg-gossip", N, Gossip, learning_rate=learning_rate, batches=batches, iterations=iterations)
-    run_emnist(data_dir, "agg-hypercube", N, Hypercube, learning_rate=learning_rate, batches=batches, iterations=iterations)
+#    run_emnist(data_dir, "exchange-gossip", N, ExchangeGossip, learning_rate=learning_rate, batches=batches, iterations=iterations)
+#    run_emnist(data_dir, "agg-gossip", N, Gossip, learning_rate=learning_rate, batches=batches, iterations=iterations)
+#    run_emnist(data_dir, "agg-hypercube", N, Hypercube, learning_rate=learning_rate, batches=batches, iterations=iterations)
     run_emnist_fls(data_dir, "agg-fls", N, learning_rate=learning_rate, batches=batches, iterations=iterations)
