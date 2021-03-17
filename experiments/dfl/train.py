@@ -10,6 +10,7 @@ class Trainer:
         self.clients = clients
         self.test_concated = concat_data([client.get_test_data() for client in self.clients])
         self.train_concated = concat_data([client.get_train_data() for client in self.clients])
+        self.test_evals = []
 
     def __eval_data(self, data_set, epoch, data):
         losses, accuracies = [], []
@@ -17,10 +18,14 @@ class Trainer:
             loss, accuracy = client.model.evaluate(*data, verbose=0, batch_size=32)
             losses.append(loss)
             accuracies.append(accuracy)
-        print(f"{data_set} {epoch} ::: loss: {np.mean(losses)}   ----   accuracy: {np.mean(accuracies)}")
+        loss = np.mean(losses)
+        accuracy = np.mean(accuracies)
+        print(f"{data_set} {epoch} ::: loss: {loss}   ----   accuracy: {accuracy}")
+        return loss, accuracy
 
     def eval_test(self, epoch):
-        return self.__eval_data("TEST", epoch, self.test_concated)
+        loss, accuracy = self.__eval_data("TEST", epoch, self.test_concated)
+        self.test_evals.append((loss, accuracy))
 
     def eval_train(self, epoch):
         return self.__eval_data("TRAIN", epoch, self.train_concated)
