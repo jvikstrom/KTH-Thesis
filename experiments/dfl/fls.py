@@ -1,3 +1,37 @@
+from train import Trainer
+
+
+class FLS(Trainer):
+    def __init__(self, clients, unused):
+        Trainer.__init__(self, clients)
+
+    def run(self, batches: int = 1, iterations: int = 100):
+        for i in range(iterations):
+            old_weights = [weights for weights in self.clients[0].model.get_weights()]
+            for client in self.clients:
+                client.model.set_weights([weight.copy() for weight in old_weights])
+            # Does server SGD aggregation with server learning rate = 1.0
+            for client in self.clients:
+                client.train(batches)
+            all_weights = [client.model.get_weights() for client in self.clients]
+
+            aggregated_weights = all_weights[0]
+            for j in range(1, len(all_weights)):
+                for k in range(len(aggregated_weights)):
+                    aggregated_weights[k] += all_weights[j][k]
+                    # aggregated_weights[k] += aggregated_weights[j][k] - old_model[k]
+            for k in range(len(aggregated_weights)):
+                aggregated_weights[k] = aggregated_weights[k] / len(self.clients)
+                # aggregated_weights[k] = old_model[k] - server_learning_rate * aggregated_weights[k] / len(self.clients)
+
+            for client in self.clients:
+                client.model.set_weights([weight.copy() for weight in aggregated_weights])
+            loss, accuracy = self.clients[0].model.evaluate(*self.test_concated, verbose=0, batch_size=32)
+            self.test_evals.append((loss, accuracy))
+            print(f"FLS {i} ::: loss: {loss}   ----   accuracy: {accuracy}")
+            Trainer.step(self)
+
+"""
 import nest_asyncio
 nest_asyncio.apply()
 import collections
@@ -26,7 +60,7 @@ PREFETCH_BUFFER = 10
 def preprocess(dataset):
 
   def batch_format_fn(element):
-    """Flatten a batch `pixels` and return the features as an `OrderedDict`."""
+    # Flatten a batch `pixels` and return the features as an `OrderedDict`.
     return collections.OrderedDict(
         x=tf.reshape(element['pixels'], [-1, 28, 28, 1]),
         y=tf.reshape(element['label'], [-1, 1]))
@@ -81,3 +115,4 @@ for round_num in range(NUM_ROUNDS):
 
 #state, metrics = iterative_process.next(state, federated_train_data)
 #print('round  1, metrics={}'.format(metrics))
+"""

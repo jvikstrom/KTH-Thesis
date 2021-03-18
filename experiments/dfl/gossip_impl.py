@@ -14,7 +14,7 @@ def recv_model(sender: Tuple[int, Client], receiver: Tuple[int, Client], batches
     weights = [model.get_weights() for model in [sender[1].model, receiver[1].model]]
     new_weights = list()
     for send_weight, recv_weight in zip(*weights):
-        new_weights.append(send_weight)
+        new_weights.append(send_weight.copy())
     #        new_weights.append((1 - a) * send_weight + a * recv_weight)
 
     # Do the update step.
@@ -40,12 +40,8 @@ Tuple[tf.keras.Model, tf.keras.Model]:
 
 
 class Gossip(Trainer):
-    # , recv_model: Callable[[Tuple[int,Client],Tuple[int,Client], Tuple[bool,bool]],int])
     def __init__(self, clients: List[Client], guider: Callable[[List[Client]], Guider]):
         Trainer.__init__(self, clients)
-        #        for client in self.clients:
-        #            client.model.set_weights(self.clients[0].model.get_weights())
-        #            client.model.set_weights([np.zeros_like(w) for w in client.model.get_weights()])
         self.versions = [1 for _ in range(len(clients))]
         self.guider = guider(clients)
         self.recv_model = recv_model
@@ -54,15 +50,16 @@ class Gossip(Trainer):
         for i in range(iterations):
             for client_idx in tqdm(range(len(self.clients))):
                 nxt = self.guider.next(client_idx)
-                #                self.recv_model(self.clients[client_idx], self.clients[nxt])
                 self.versions[nxt] = self.recv_model((self.versions[client_idx], self.clients[client_idx]),
                                                      (self.versions[nxt], self.clients[nxt]), batches=batches)
-            if i % 50 == 0 and i != 0:
-                self.eval_train(i)
-            self.eval_test(i)
+            #if i % 50 == 0 and i != 0:
+            #    self.eval_train(i)
+            if i % 1 == 0 and i != 0:
+                self.eval_test(i)
             # a_weights = self.clients[0].model.get_weights()
             # for a_weight in a_weights:
             #    print(f"mean:{a_weight.mean()}, max:{a_weight.max()}, min:{a_weight.min()}, std:{a_weight.std()}")
+            Trainer.step(self)
 
 
 class ExchangeGossip(Trainer):
@@ -73,14 +70,34 @@ class ExchangeGossip(Trainer):
 
     def run(self, batches: int = 1, iterations: int = 100):
         for i in range(iterations):
-            for client_idx in tqdm(range(len(self.clients))):
-                # if client_idx > 1:
-                #    continue
+            exchanged = []
+            for client_idx in range(len(self.clients)):
                 nxt = self.guider.next(client_idx)
-                self.recv_model(self.clients[client_idx], self.clients[nxt], batches=batches)
-            if i % 100 == 0 and i != 0:
+                exchange_pair = (client_idx, nxt)
+                if client_idx > nxt:
+                    exchange_pair = (nxt, client_idx)
+                if exchange_pair not in exchanged:
+                #    self.recv_model(self.clients[client_idx], self.clients[nxt], batches=batches)
+                    exchanged.append(exchange_pair)
+            # Do the actual exchanges.
+            model_weights = [client.model.get_weights() for client in self.clients]
+            optimizer_configs = [client.model.optimizer.get_config() for client in self.clients]
+            for p1, p2 in exchanged:
+                #print(f"{p1} -> {p2}")
+                # Need to clone the model as otherwise the exchanges might cause multiple clients to have the same model
+                # pointer.
+                self.clients[p1].model.set_weights([weight.copy() for weight in model_weights[p2]])
+                #self.clients[p1].model.optimizer = tf.keras.optimizers.Adam.from_config(optimizer_configs[p2])
+                self.clients[p2].model.set_weights([weight.copy() for weight in model_weights[p1]])
+                #self.clients[p2].model.optimizer = tf.keras.optimizers.Adam.from_config(optimizer_configs[p1])
+
+#                self.clients[p2].model = tf.keras.models.clone_model(models[p1])
+            for client in tqdm(self.clients):
+                client.train(batches)
+
+            if i % 20 == 0 and i != 0:
                 self.eval_train(i)
-            self.eval_test(i)
-            # a_weights = self.clients[0].model.get_weights()
-            # for a_weight in a_weights:
-            #    print(f"mean:{a_weight.mean()}, max:{a_weight.max()}, min:{a_weight.min()}, std:{a_weight.std()}")
+            if i % 1 == 0 and i != 0:
+                self.eval_test(i)
+            Trainer.step(self)
+# 4323

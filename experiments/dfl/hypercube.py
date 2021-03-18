@@ -24,7 +24,7 @@ class Hypercube(Trainer):
     def __init__(self, clients: List[Client], unused):
         Trainer.__init__(self, clients)
         for client in self.clients:
-            client.model.set_weights(clients[0].model.get_weights())
+            client.model.set_weights([weight.copy() for weight in clients[0].model.get_weights()])
         self.rounds = preprocess_client_targets(clients)
 
     def run(self, batches: int = 1, iterations: int = 100):
@@ -35,12 +35,14 @@ class Hypercube(Trainer):
             for round in self.rounds:
                 for a, b in round:
                     combine(self.clients[a], self.clients[b])
-            if i % 100 == 0 and i != 0:
-                self.eval_train(i)
-            self.eval_test(i)
+            #if i % 100 == 0 and i != 0:
+            #    self.eval_train(i)
+            if i % 5 == 0 and i != 0:
+                self.eval_test(i)
             #a_weights = self.clients[0].model.get_weights()
             #for a_weight in a_weights:
             #    print(f"mean:{a_weight.mean()}, max:{a_weight.max()}, min:{a_weight.min()}, std:{a_weight.std()}")
+        Trainer.step(self)
 
 
 class HamiltonCycleGuider(Guider):
