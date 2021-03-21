@@ -4,18 +4,18 @@ from train import Trainer
 class FLS(Trainer):
     def __init__(self, clients, unused):
         Trainer.__init__(self, clients)
+        for client in self.clients:
+            client.model.set_weights([weight.copy() for weight in self.clients[0].model.get_weights()])
 
     def run(self, batches: int = 1, iterations: int = 100):
         for i in range(iterations):
-            old_weights = [weights for weights in self.clients[0].model.get_weights()]
-            for client in self.clients:
-                client.model.set_weights([weight.copy() for weight in old_weights])
             # Does server SGD aggregation with server learning rate = 1.0
             for client in self.clients:
                 client.train(batches)
+
             all_weights = [client.model.get_weights() for client in self.clients]
 
-            aggregated_weights = all_weights[0]
+            aggregated_weights = [weight.copy() for weight in all_weights[0]]
             for j in range(1, len(all_weights)):
                 for k in range(len(aggregated_weights)):
                     aggregated_weights[k] += all_weights[j][k]

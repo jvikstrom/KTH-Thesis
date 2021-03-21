@@ -6,12 +6,13 @@ from dataset import load_from_emnist, concat_data
 from client import Client, Guider
 from hypercube import Hypercube, HamiltonCycleGuider
 from gossip_impl import Gossip, ExchangeGossip
+from centralized import Centralized
 from fls import FLS
 import numpy as np
 import pandas as pd
 import storage
 import gc
-
+from tqdm import tqdm
 
 def model_fn_factory(learning_rate):
     def fn():
@@ -41,7 +42,7 @@ def model_fn_factory(learning_rate):
     return fn
 
 
-def run_emnist(data_dir: str, name: str, N, strategy, learning_rate, guider=Guider, batches=1, iterations=100):
+def run_emnist(data_dir: str, name: str, N, strategy, learning_rate, guider=Guider, batches=1, iterations=100, version=1):
     # Load simulation data.
     train, test = tff.simulation.datasets.emnist.load_data(only_digits=False)
     clients = [Client(load_from_emnist(train, i), load_from_emnist(test, i), model_fn_factory(learning_rate)) for i in range(N)]
@@ -52,7 +53,8 @@ def run_emnist(data_dir: str, name: str, N, strategy, learning_rate, guider=Guid
     for i in range(len(hyper.test_evals)):
         loss, accuracy = hyper.test_evals[i]
         df = df.append({
-            'name': name,
+            'name': f"{name}-{version}",
+            'version': version,
             'N': N,
             'batches': batches,
             'iterations': iterations,
@@ -62,22 +64,26 @@ def run_emnist(data_dir: str, name: str, N, strategy, learning_rate, guider=Guid
         }, ignore_index=True)
 
     print(f"Writing: {len(df)} records to {name}")
-    #storage.append(data_dir, name+".csv", df)
+    storage.append(data_dir, name+".csv", df)
 
 
 if __name__ == "__main__":
     #gc.set_debug(gc.DEBUG_LEAK)
-    N = 8
-    iterations = 50
-    batches = 4
+    number = 30
+    N = 16
+    iterations = 300
+    batches = 12
     # learning_rate = 0.001 <-- Adam learning rate
     learning_rate = 0.05
     data_dir = "./data"
-#    run_emnist(data_dir, "exchange-gossip", N, ExchangeGossip, learning_rate=learning_rate, batches=batches, iterations=iterations)
-#    run_emnist(data_dir, "exchange-cycle", N, ExchangeGossip, learning_rate=learning_rate, guider=HamiltonCycleGuider, batches=batches, iterations=iterations)
-    run_emnist(data_dir, "agg-gossip", N, Gossip, learning_rate=learning_rate, batches=batches, iterations=iterations)
-    run_emnist(data_dir, "agg-hypercube", N, Hypercube, learning_rate=learning_rate, batches=batches, iterations=iterations)
-    client_learning_rate = 0.1
-    run_emnist(data_dir, "agg-fls", N, FLS, learning_rate=client_learning_rate, batches=batches, iterations=iterations)
-    server_learning_rate = 1.0
 
+    for i in range(number):
+        print(f"\n\n\n\n-------------------\nIteration {i}\n---------------------------\n\n\n\n\n")
+        run_emnist(data_dir, f"exchange-gossip", N, ExchangeGossip, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)
+        run_emnist(data_dir, f"exchange-cycle", N, ExchangeGossip, learning_rate=learning_rate, guider=HamiltonCycleGuider, batches=batches, iterations=iterations, version=i)
+        run_emnist(data_dir, f"agg-gossip", N, Gossip, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)
+        run_emnist(data_dir, f"agg-hypercube", N, Hypercube, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)
+        client_learning_rate = 0.05
+        run_emnist(data_dir, f"agg-fls", N, FLS, learning_rate=client_learning_rate, batches=batches, iterations=iterations, version=i)
+        server_learning_rate = 1.0
+        run_emnist(data_dir, f"centralized", N, Centralized, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)

@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
 from tqdm import tqdm
-from client import Client, combine, Guider
+from client import Client, Guider
 from train import Trainer
 
 
@@ -20,6 +20,15 @@ def preprocess_client_targets(clients: List[Client]):
     return rounds
 
 
+def combine(a: Client, b: Client):
+    weights = [model.get_weights() for model in [a.model, b.model]]
+    new_weights = list()
+    for a_weight, b_weight in zip(*weights):
+        new_weights.append((a_weight + b_weight) / 2.0)
+    a.model.set_weights([weight.copy() for weight in new_weights])
+    b.model.set_weights([weight.copy() for weight in new_weights])
+
+
 class Hypercube(Trainer):
     def __init__(self, clients: List[Client], unused):
         Trainer.__init__(self, clients)
@@ -28,16 +37,32 @@ class Hypercube(Trainer):
         self.rounds = preprocess_client_targets(clients)
 
     def run(self, batches: int = 1, iterations: int = 100):
+#        vals = [[i] for i in range(len(self.clients))]
+#        for round in self.rounds:
+#            for a, b in round:
+#                print(f"{a}<-{b}, {vals[a]}, {vals[b]}")
+#                vals[a] += vals[b].copy()
+#                vals[b] = vals[a].copy()
+#        print(vals[0], sum([i for i in range(len(self.clients))]))
+
         for i in range(iterations):
             for client in tqdm(self.clients, desc="train"):
                 client.train(batches=batches)
 
+            aggregated_weights = [np.zeros_like(weight) for weight in self.clients[0].model.get_weights()]
+            client_weights = [client.model.get_weights() for client in self.clients]
             for round in self.rounds:
                 for a, b in round:
-                    combine(self.clients[a], self.clients[b])
-            #if i % 100 == 0 and i != 0:
-            #    self.eval_train(i)
-            if i % 5 == 0 and i != 0:
+#                    combine(self.clients[a], self.clients[b])
+                    new_weights = [(a+b).copy() for a,b in zip(client_weights[a], client_weights[b])]
+                    client_weights[a] = [weight.copy() / 2.0 for weight in new_weights]
+                    client_weights[b] = [weight.copy() / 2.0 for weight in new_weights]
+            correct_weights = [weight.copy() for weight in client_weights[0]]
+            for client in self.clients:
+                client.model.set_weights([weight.copy() for weight in correct_weights])
+            if i % 100 == 0 and i != 0:
+                self.eval_train(i)
+            if i % 1 == 0:
                 self.eval_test(i)
             #a_weights = self.clients[0].model.get_weights()
             #for a_weight in a_weights:

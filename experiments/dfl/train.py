@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
 from tqdm import tqdm
-from client import Client, combine
+from client import Client
 from dataset import concat_data
 import gc
 
@@ -25,7 +25,9 @@ class Trainer:
             accuracies.append(accuracy)
         loss = np.mean(losses)
         accuracy = np.mean(accuracies)
+        #diff = np.max(accuracies) - np.min(accuracies)
         print(f"{data_set} {epoch} ::: loss: {loss}   ----   accuracy: {accuracy}")
+        #print(f"{data_set} {epoch} ::: accuracy diff: {diff}")
         return loss, accuracy
 
     def eval_test(self, epoch):
@@ -35,7 +37,7 @@ class Trainer:
     def eval_train(self, epoch):
         return self.__eval_data("TRAIN", epoch, self.train_concated)
 
-    def run(self, epochs: int = 1, iterations: int = 100):
+    def run(self, batches: int = 1, iterations: int = 100):
         pass
 
     def step(self):
