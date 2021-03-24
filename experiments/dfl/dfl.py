@@ -71,15 +71,17 @@ if __name__ == "__main__":
     #gc.set_debug(gc.DEBUG_LEAK)
     number = 30
     N = 16
-    iterations = 300
+    iterations = 1000
     batches = 12
     # learning_rate = 0.001 <-- Adam learning rate
     learning_rate = 0.05
     data_dir = "./data"
 
     for i in range(number):
+        run_emnist(data_dir, f"agg-gossip", N, Gossip, learning_rate=learning_rate, batches=batches,
+                   iterations=iterations, version=i)
         print(f"\n\n\n\n-------------------\nIteration {i}\n---------------------------\n\n\n\n\n")
-        run_emnist(data_dir, f"exchange-gossip", N, ExchangeGossip, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)
+"""        run_emnist(data_dir, f"exchange-gossip", N, ExchangeGossip, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)
         run_emnist(data_dir, f"exchange-cycle", N, ExchangeGossip, learning_rate=learning_rate, guider=HamiltonCycleGuider, batches=batches, iterations=iterations, version=i)
         run_emnist(data_dir, f"agg-gossip", N, Gossip, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)
         run_emnist(data_dir, f"agg-hypercube", N, Hypercube, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)
@@ -87,3 +89,4 @@ if __name__ == "__main__":
         run_emnist(data_dir, f"agg-fls", N, FLS, learning_rate=client_learning_rate, batches=batches, iterations=iterations, version=i)
         server_learning_rate = 1.0
         run_emnist(data_dir, f"centralized", N, Centralized, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)
+"""

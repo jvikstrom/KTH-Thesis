@@ -52,6 +52,18 @@ class Gossip(Trainer):
             for client_idx in tqdm(range(len(self.clients))):
                 nxt = self.guider.next(client_idx)
                 send_weights = old_weights[client_idx]
+                # Does an average.
+                both_weights = zip(send_weights, old_weights[nxt])
+                a = self.versions[nxt] / (self.versions[nxt] + self.versions[client_idx])
+                t = max(self.versions[nxt], self.versions[client_idx])
+                send_weights = []
+                for a_w, r_w in both_weights:
+                    send_weights.append((1-a)*a_w.copy() + a * r_w.copy())
+                self.versions[nxt] = t+1
+                # for send_weight, recv_weight in zip(*weights):
+                #    new_weights.append(send_weight.copy())
+                #        new_weights.append((1 - a) * send_weight + a * recv_weight)
+
                 self.clients[nxt].model.set_weights([weight.copy() for weight in send_weights])
                 self.clients[nxt].train(batches)
 #                self.versions[nxt] = self.recv_model((self.versions[client_idx], self.clients[client_idx]),

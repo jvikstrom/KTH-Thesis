@@ -4,7 +4,7 @@
     https://github.com/ivishalanand/Federated-Learning-on-Hospital-Data/blob/master/Hospital%20data%20Federated%20learning.ipynb
 *** NN5 data: Need to heavy models, literally going to take weeks to train multiple models of it. Could do a smaller experiment on it though.
     https://www.researchgate.net/publication/222823272_Forecast_combinations_of_computational_intelligence_and_linear_models_for_the_NN5_time_series_forecasting_competition
-    Literally moving average is one of the best models.
+    Moving average is one of the best models.
     Literally the only feature is a scalar. If we need to do time series, probably use Rossman: https://www.kaggle.com/c/rossmann-store-sales/data?select=train.csv
 * Implement Gossip learning or BrainTorrent and benchmark against that.
 *** Gossip learning: MergeNone works like way better then MergeAverage... --> Make sense
