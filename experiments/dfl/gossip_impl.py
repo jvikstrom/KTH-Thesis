@@ -118,6 +118,8 @@ class ExchangeGossip(Trainer):
                 # Need to clone the model as otherwise the exchanges might cause multiple clients to have the same model
                 # pointer.
                 self.clients[p1].model.set_weights([weight.copy() for weight in model_weights[p2]])
+                old_optimizer_weights = self.clients[p1].model.get_weights()
+                print(f"Optimizer weights: {old_optimizer_weights}")
                 # self.clients[p1].model.optimizer = tf.keras.optimizers.Adam.from_config(optimizer_configs[p2])
                 self.clients[p2].model.set_weights([weight.copy() for weight in model_weights[p1]])
                 # self.clients[p2].model.optimizer = tf.keras.optimizers.Adam.from_config(optimizer_configs[p1])
