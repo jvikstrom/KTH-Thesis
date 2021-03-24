@@ -117,6 +117,7 @@ def fls_config(n: int, data_dir: str, learning_rate: float, batches: float, iter
         strategy=FLS,
     )
 
+
 def centralized_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
     return Config(
         N=n,

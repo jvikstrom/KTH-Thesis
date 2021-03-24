@@ -57,7 +57,7 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
         model_fn_factory(learning_rate, cfg.optimizer)
     ) for i in range(N)]
 
-    hyper = strategy(clients, cfg)
+    hyper = strategy(clients, cfg.extra_config)
     hyper.run()
     df = pd.DataFrame()
     for i in range(len(hyper.test_evals)):
@@ -78,7 +78,7 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
 
 
 def run(cfg: Config, version: int):
-    run_emnist(cfg.data_dir, cfg.name, cfg.N, cfg.strategy, cfg.extra_config, learning_rate=cfg.learning_rate,
+    run_emnist(cfg.data_dir, cfg.name, cfg.N, cfg.strategy, cfg, learning_rate=cfg.learning_rate,
                version=version)
 
 
