@@ -3,8 +3,8 @@ from tqdm import tqdm
 import tensorflow as tf
 import numpy as np
 from client import Client, Guider
-from train import Trainer
-
+from train import Trainer, TrainerConfig
+from pydantic import BaseModel
 
 def recv_model(sender: Tuple[int, Client], receiver: Tuple[int, Client], batches=1) -> int:
     # Implements the MergeAverage.
@@ -39,35 +39,44 @@ def exchange_recv_model(sender: Client, receiver: Client, failure: Tuple[bool, b
     return sender.model, receiver.model
 
 
-class Gossip(Trainer):
-    def __init__(self, clients: List[Client], guider: Callable[[List[Client]], Guider]):
-        Trainer.__init__(self, clients)
-        self.versions = [1 for _ in range(len(clients))]
-        self.guider = guider(clients)
-        self.recv_model = recv_model
+class BaseGossipConfig(BaseModel):
+    trainer_config: TrainerConfig
+    guider: Callable[[List[Client]], Guider]
 
-    def run(self, batches: int = 1, iterations: int = 100):
-        for i in range(iterations):
+
+class GossipConfig(BaseModel):
+    base_config: BaseGossipConfig
+    average: bool
+
+
+class Gossip(Trainer):
+    def __init__(self, clients: List[Client], cfg: GossipConfig):
+        Trainer.__init__(self, clients, cfg.base_config.trainer_config)
+        self.versions = [1 for _ in range(len(clients))]
+        self.guider = cfg.base_config.guider(clients)
+        self.recv_model = recv_model
+        self.config = cfg
+
+    def run(self):
+        for i in range(self.trainer_config.iterations):
             old_weights = [client.model.get_weights() for client in self.clients]
             for client_idx in tqdm(range(len(self.clients))):
                 nxt = self.guider.next(client_idx)
                 send_weights = old_weights[client_idx]
-                # Does an average.
+                # Does the preprocessing for averaging.
                 both_weights = zip(send_weights, old_weights[nxt])
                 a = self.versions[nxt] / (self.versions[nxt] + self.versions[client_idx])
-                t = max(self.versions[nxt], self.versions[client_idx])
-                send_weights = []
-                for a_w, r_w in both_weights:
-                    send_weights.append((1-a)*a_w.copy() + a * r_w.copy())
-                self.versions[nxt] = t+1
-                # for send_weight, recv_weight in zip(*weights):
-                #    new_weights.append(send_weight.copy())
-                #        new_weights.append((1 - a) * send_weight + a * recv_weight)
+                if self.config.average:
+                    # Only do the averaging if the average flag is set.
+                    send_weights = []
+                    for a_w, r_w in both_weights:
+                        # TODO: Try shifting a_w and r_w
+                        send_weights.append((1-a)*a_w.copy() + a * r_w.copy())
 
+                t = max(self.versions[nxt], self.versions[client_idx])
+                self.versions[nxt] = t+1
                 self.clients[nxt].model.set_weights([weight.copy() for weight in send_weights])
-                self.clients[nxt].train(batches)
-#                self.versions[nxt] = self.recv_model((self.versions[client_idx], self.clients[client_idx]),
-#                                                     (self.versions[nxt], self.clients[nxt]), batches=batches)
+                self.clients[nxt].train(self.trainer_config.batches)
             # if i % 50 == 0 and i != 0:
             #    self.eval_train(i)
             if i % 1 == 0 and i != 0:
@@ -78,14 +87,20 @@ class Gossip(Trainer):
             Trainer.step(self)
 
 
-class ExchangeGossip(Trainer):
-    def __init__(self, clients: List[Client], guider: Callable[[List[Client]], Guider]):
-        Trainer.__init__(self, clients)
-        self.guider = guider(clients)
-        self.recv_model = exchange_recv_model
+class ExchangeConfig(BaseModel):
+    base_config: BaseGossipConfig
+    # TODO: Use this for setting optimizers as well.
 
-    def run(self, batches: int = 1, iterations: int = 100):
-        for i in range(iterations):
+
+class ExchangeGossip(Trainer):
+    def __init__(self, clients: List[Client], cfg: ExchangeConfig):
+        Trainer.__init__(self, clients, cfg.base_config.trainer_config)
+        self.guider = cfg.base_config.guider(clients)
+        self.recv_model = exchange_recv_model
+        self.config = cfg
+
+    def run(self):
+        for i in range(self.config.base_config.trainer_config.iterations):
             exchanged = []
             for client_idx in range(len(self.clients)):
                 nxt = self.guider.next(client_idx)
@@ -109,7 +124,7 @@ class ExchangeGossip(Trainer):
 
             #                self.clients[p2].model = tf.keras.models.clone_model(models[p1])
             for client in tqdm(self.clients):
-                client.train(batches)
+                client.train(self.config.base_config.trainer_config.batches)
 
             if i % 20 == 0 and i != 0:
                 self.eval_train(i)

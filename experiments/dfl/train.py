@@ -4,13 +4,21 @@ from tqdm import tqdm
 from client import Client
 from dataset import concat_data
 import gc
+from pydantic import BaseModel
+
+
+class TrainerConfig(BaseModel):
+    batches: int
+    iterations: int
+
 
 class Trainer:
-    def __init__(self, clients: List[Client]):
+    def __init__(self, clients: List[Client], cfg: TrainerConfig):
         self.clients = clients
         self.test_concated = concat_data([client.get_test_data() for client in self.clients])
         self.train_concated = concat_data([client.get_train_data() for client in self.clients])
         self.test_evals = []
+        self.trainer_config = cfg
 
     def __eval_data(self, data_set, epoch, data):
         losses, accuracies = [], []
@@ -37,7 +45,7 @@ class Trainer:
     def eval_train(self, epoch):
         return self.__eval_data("TRAIN", epoch, self.train_concated)
 
-    def run(self, batches: int = 1, iterations: int = 100):
+    def run(self):
         pass
 
     def step(self):
