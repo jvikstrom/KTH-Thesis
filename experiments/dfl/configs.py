@@ -1,18 +1,14 @@
 import sys
 import os
 import tensorflow as tf
+import tensorflow_addons as tfa
 import tensorflow_federated as tff
 from dataset import load_from_emnist, concat_data
-from client import Client, Guider
+from client import Guider
 from hypercube import Hypercube, HamiltonCycleGuider, HypercubeConfig
 from gossip_impl import Gossip, ExchangeGossip, GossipConfig, BaseGossipConfig, ExchangeConfig
 from centralized import Centralized
 from fls import FLS, FLSConfig
-import numpy as np
-import pandas as pd
-import storage
-import gc
-from tqdm import tqdm
 from pydantic import BaseModel
 from typing import Any, Callable
 from train import TrainerConfig
@@ -25,7 +21,7 @@ class Config(BaseModel):
     learning_rate: float
     extra_config: Any
     strategy: Any
-    optimizer: Callable = tf.optimizers.SGD
+    optimizer: Callable
 
 
 def none_gossip_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
@@ -45,15 +41,16 @@ def none_gossip_config(n: int, data_dir: str, learning_rate: float, batches: flo
             )
         ),
         strategy=Gossip,
+        optimizer=tf.optimizers.SGD,
     )
 
 
-def exchange_cycle_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
+def exchange_cycle_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float) -> Config:
     return Config(
         N=n,
         learning_rate=learning_rate,
         data_dir=data_dir,
-        name="exchange-cycle-gossip",
+        name="exchange-cycle",
         extra_config=ExchangeConfig(
             base_config=BaseGossipConfig(
                 trainer_config=TrainerConfig(
@@ -64,7 +61,15 @@ def exchange_cycle_config(n: int, data_dir: str, learning_rate: float, batches: 
             )
         ),
         strategy=ExchangeGossip,
+        optimizer=tf.optimizers.SGD,
     )
+
+
+def exchange_cycle_adam_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
+    cfg = exchange_cycle_config(n, data_dir, learning_rate, batches, iterations)
+#    cfg.optimizer = tfa.optimizers.Yogi
+#    cfg.optimizer = tf.optimizers.Adam
+    return cfg
 
 
 def exchange_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
@@ -83,6 +88,7 @@ def exchange_config(n: int, data_dir: str, learning_rate: float, batches: float,
             )
         ),
         strategy=ExchangeGossip,
+        optimizer=tf.optimizers.SGD,
     )
 
 
@@ -99,6 +105,7 @@ def aggregate_hypercube_config(n: int, data_dir: str, learning_rate: float, batc
             ),
         ),
         strategy=Hypercube,
+        optimizer=tf.optimizers.SGD,
     )
 
 
@@ -115,6 +122,7 @@ def fls_config(n: int, data_dir: str, learning_rate: float, batches: float, iter
             ),
         ),
         strategy=FLS,
+        optimizer=tf.optimizers.SGD,
     )
 
 
@@ -129,4 +137,5 @@ def centralized_config(n: int, data_dir: str, learning_rate: float, batches: flo
             iterations=iterations,
         ),
         strategy=Centralized,
+        optimizer=tf.optimizers.SGD,
     )
