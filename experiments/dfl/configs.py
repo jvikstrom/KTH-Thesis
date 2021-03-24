@@ -68,7 +68,8 @@ def exchange_cycle_config(n: int, data_dir: str, learning_rate: float, batches: 
 def exchange_cycle_adam_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
     cfg = exchange_cycle_config(n, data_dir, learning_rate, batches, iterations)
 #    cfg.optimizer = tfa.optimizers.Yogi
-#    cfg.optimizer = tf.optimizers.Adam
+    cfg.optimizer = tf.optimizers.Adam
+    cfg.name += "-adam"
     return cfg
 
 

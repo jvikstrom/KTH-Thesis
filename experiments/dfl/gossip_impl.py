@@ -100,7 +100,7 @@ class ExchangeGossip(Trainer):
         self.config = cfg
 
     def run(self):
-        for i in range(self.config.base_config.trainer_config.iterations):
+        for i in range(self.trainer_config.iterations):
             exchanged = []
             for client_idx in range(len(self.clients)):
                 nxt = self.guider.next(client_idx)
@@ -112,19 +112,20 @@ class ExchangeGossip(Trainer):
                     exchanged.append(exchange_pair)
             # Do the actual exchanges.
             model_weights = [client.model.get_weights() for client in self.clients]
-            #old_models = [client.model for client in self.clients]
+            old_models = [client.model for client in self.clients]
             optimizer_configs = [client.model.optimizer.get_config() for client in self.clients]
             for p1, p2 in exchanged:
                 # print(f"{p1} -> {p2}")
                 # Need to clone the model as otherwise the exchanges might cause multiple clients to have the same model
                 # pointer.
 #                old_model = self.clients[p1].model
-                #self.clients[p1].model = old_models[p2]
-                #self.clients[p2].model = old_models[p1]
-                self.clients[p1].model.set_weights([weight.copy() for weight in model_weights[p2]])
+                # TODO: This will fuck up and have multiple references in case switch with same (can happen with exchange-gossip).
+                self.clients[p1].model = old_models[p2]
+                self.clients[p2].model = old_models[p1]
+#                self.clients[p1].model.set_weights([weight.copy() for weight in model_weights[p2]])
                 #print(f"Optimizer weights: {old_optimizer_weights}")
                 # self.clients[p1].model.optimizer = tf.keras.optimizers.Adam.from_config(optimizer_configs[p2])
-                self.clients[p2].model.set_weights([weight.copy() for weight in model_weights[p1]])
+#                self.clients[p2].model.set_weights([weight.copy() for weight in model_weights[p1]])
 #                old_optimizer_weights = self.clients[p1].model.get_weights()
 #                self.clients[p1].model.set_weights([weight.copy() for weight in self.clients[p2].model.get_weights()])
 #                self.clients[p2].model.set_weights([weight.copy() for weight in old_optimizer_weights])
@@ -133,7 +134,7 @@ class ExchangeGossip(Trainer):
 
             #                self.clients[p2].model = tf.keras.models.clone_model(models[p1])
             for client in tqdm(self.clients):
-                client.train(self.config.base_config.trainer_config.batches)
+                client.train(self.trainer_config.batches)
 
             if i % 20 == 0 and i != 0:
                 self.eval_train(i)
