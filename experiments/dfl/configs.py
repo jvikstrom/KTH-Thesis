@@ -132,7 +132,7 @@ def centralized_config(n: int, data_dir: str, learning_rate: float, batches: flo
         N=n,
         learning_rate=learning_rate,
         data_dir=data_dir,
-        name="fls",
+        name="centralized",
         extra_config=TrainerConfig(
             batches=batches,
             iterations=iterations,

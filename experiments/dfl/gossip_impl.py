@@ -136,9 +136,9 @@ class ExchangeGossip(Trainer):
             for client in tqdm(self.clients):
                 client.train(self.trainer_config.batches)
 
-            if i % 20 == 0 and i != 0:
+            if i % 100 == 0 and i != 0:
                 self.eval_train(i)
-            if i % 1 == 0 and i != 0:
+            if i % 10 == 0 and i != 0:
                 self.eval_test(i)
             Trainer.step(self)
 # 4323

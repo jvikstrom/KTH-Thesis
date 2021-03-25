@@ -61,14 +61,14 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
     hyper.run()
     df = pd.DataFrame()
     for i in range(len(hyper.test_evals)):
-        loss, accuracy = hyper.test_evals[i]
+        iter, loss, accuracy = hyper.test_evals[i]
         df = df.append({
             'name': f"{name}-{version}",
             'version': version,
             'N': N,
 #            'batches': batches,
 #            'iterations': iterations,
-            'current_iteration': i,
+            'current_iteration': iter,
             'loss': loss,
             'accuracy': accuracy,
         }, ignore_index=True)

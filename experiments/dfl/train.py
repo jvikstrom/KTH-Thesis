@@ -40,7 +40,7 @@ class Trainer:
 
     def eval_test(self, epoch):
         loss, accuracy = self.__eval_data("TEST", epoch, self.test_concated)
-        self.test_evals.append((loss, accuracy))
+        self.test_evals.append((epoch, loss, accuracy))
 
     def eval_train(self, epoch):
         return self.__eval_data("TRAIN", epoch, self.train_concated)
