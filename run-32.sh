@@ -2,12 +2,18 @@
 
 # Script for running the ML on the GPU server.
 
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
+
+
 N=32
 Runs=5
 Batches=1
 Iters=5000
 export DATA_DIR="data-32-1"
 cd dfl
+
+mkdir data
 CUDA_VISIBLE_DEVICES="0" python3 main.py emnist centralized $N $Runs $Batches $Iters 0.01 > centralized.stdout 2>&1 &
 centralized_PID=$!
 CUDA_VISIBLE_DEVICES="0" python3 main.py emnist fls $N $Runs $Batches $Iters 0.06 > fls.stdout 2>&1 &
