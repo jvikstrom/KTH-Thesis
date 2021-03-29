@@ -28,3 +28,11 @@ cd ..
 
 echo "pids: " $centralized_PID $exchange_cycle_adam_PID $exchange_cycle_PID $none_gossip_PID $exchange_PID $agg_hypercube_PID $fls_PID
 
+wait $centralized_PID
+wait $exchange_cycle_adam_PID
+wait $exchange_cycle_PID
+wait $none_gossip_PID
+wait $exchange_PID
+wait $agg_hypercube_PID
+wait $fls_PID
+
