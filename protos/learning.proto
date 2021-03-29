@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-message Message {
-    Model model = 1;
-}
-
-message Model {
-    repeated float weights = 1;
-}
