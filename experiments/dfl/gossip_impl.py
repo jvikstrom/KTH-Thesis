@@ -90,6 +90,7 @@ class Gossip(Trainer):
 class ExchangeConfig(BaseModel):
     base_config: BaseGossipConfig
     # TODO: Use this for setting optimizers as well.
+    swap_optimizer: bool
 
 
 class ExchangeGossip(Trainer):
@@ -108,36 +109,23 @@ class ExchangeGossip(Trainer):
                 if client_idx > nxt:
                     exchange_pair = (nxt, client_idx)
                 if exchange_pair not in exchanged:
-                    #    self.recv_model(self.clients[client_idx], self.clients[nxt], batches=batches)
                     exchanged.append(exchange_pair)
-            #print(f"EXCHANGE: {exchanged}")
             # Do the actual exchanges.
             model_weights = [client.model.get_weights() for client in self.clients]
             old_models = [client.model for client in self.clients]
             optimizer_configs = [client.model.optimizer.get_config() for client in self.clients]
             for p1, p2 in exchanged:
-                # print(f"{p1} -> {p2}")
-                # Need to clone the model as otherwise the exchanges might cause multiple clients to have the same model
-                # pointer.
-#                old_model = self.clients[p1].model
                 # TODO: This will fuck up and have multiple references in case switch with same (can happen with exchange-gossip).
-                self.clients[p1].model = old_models[p2]
-                self.clients[p2].model = old_models[p1]
-#                self.clients[p1].model.set_weights([weight.copy() for weight in model_weights[p2]])
-#                self.clients[p2].model.set_weights([weight.copy() for weight in model_weights[p1]])
+                if self.config.swap_optimizer:
+                    self.clients[p1].model = old_models[p2]
+                    self.clients[p2].model = old_models[p1]
+                else:
+                    self.clients[p1].model.set_weights([weight.copy() for weight in model_weights[p2]])
+                    self.clients[p2].model.set_weights([weight.copy() for weight in model_weights[p1]])
 
 #                self.clients[p1].model.optimizer.set_weights([weight.copy() for weight in old_models[p2].optimizer.get_weights()])
 #                self.clients[p2].model.optimizer.set_weights([weight.copy() for weight in old_models[p1].optimizer.get_weights()])
 
-                #print(f"Optimizer weights: {old_optimizer_weights}")
-                # self.clients[p1].model.optimizer = tf.keras.optimizers.Adam.from_config(optimizer_configs[p2])
-#                old_optimizer_weights = self.clients[p1].model.get_weights()
-#                self.clients[p1].model.set_weights([weight.copy() for weight in self.clients[p2].model.get_weights()])
-#                self.clients[p2].model.set_weights([weight.copy() for weight in old_optimizer_weights])
-
-                # self.clients[p2].model.optimizer = tf.keras.optimizers.Adam.from_config(optimizer_configs[p1])
-
-            #                self.clients[p2].model = tf.keras.models.clone_model(models[p1])
             for client in tqdm(self.clients):
                 client.train(self.trainer_config.batches)
 

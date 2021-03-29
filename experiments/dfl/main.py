@@ -1,5 +1,6 @@
 import os
 import typer
+import tensorflow as tf
 from typing import Optional
 from configs import Config, none_gossip_config, exchange_cycle_config, exchange_config, aggregate_hypercube_config, fls_config, centralized_config, exchange_cycle_adam_config
 from emnist import run as run_emnist
@@ -7,6 +8,9 @@ from emnist import run as run_emnist
 data_dir = os.getenv("DATA_DIR")
 if data_dir is None:
     raise AssertionError("Please set DATA_DIR env variable")
+
+for gpu in tf.config.list_physical_devices('GPU'):
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 app = typer.Typer()
 
