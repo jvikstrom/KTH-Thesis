@@ -1,0 +1,17 @@
+* Look at the other datasets discussed during meeting (exploratory).
+*** Acute inflammation dataset: Dataset is to small. Data is linearly seperable, so might not be super relevant. However, could be interesting to run an FL with failures on
+    it to check if it can still find the "optimal" logistic reg model. However should not be a starting point.
+    https://github.com/ivishalanand/Federated-Learning-on-Hospital-Data/blob/master/Hospital%20data%20Federated%20learning.ipynb
+*** NN5 data: Need to heavy models, literally going to take weeks to train multiple models of it. Could do a smaller experiment on it though.
+    https://www.researchgate.net/publication/222823272_Forecast_combinations_of_computational_intelligence_and_linear_models_for_the_NN5_time_series_forecasting_competition
+    Moving average is one of the best models.
+    Literally the only feature is a scalar. If we need to do time series, probably use Rossman: https://www.kaggle.com/c/rossmann-store-sales/data?select=train.csv
+* Implement Gossip learning or BrainTorrent and benchmark against that.
+*** Gossip learning: MergeNone works like way better then MergeAverage... --> Make sense
+*** BrainTorrent: TODO: For benchmarking.
+* Benchmark under different node failures and stuff like that (also pick out 50/90/95/99th percentile models)
+* Test running against different data biases.
+* Implement FedAdagrad/FedYogi or FedAdam: https://arxiv.org/pdf/2003.00295v3.pdf  --> Maybe not in the first hand
+
+
+* Implement stuff for running on server.
