@@ -13,3 +13,5 @@
 * Test running against different data biases.
 * Implement FedAdagrad/FedYogi or FedAdam: https://arxiv.org/pdf/2003.00295v3.pdf  --> Maybe not in the first hand
 
+
+* Implement stuff for running on server.

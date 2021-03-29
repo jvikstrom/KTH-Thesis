@@ -17,8 +17,8 @@ class Client:
         self.indexes = np.arange(0, len(train_data[0]))
 
     def train(self, batches: int = 1, batch_size: int = 32):
-        self.model.fit(*self.train_data, batch_size=32, epochs=1, verbose=0)
-        """
+        #self.model.fit(*self.train_data, batch_size=32, epochs=1, verbose=0)
+
         shuffled_indexes = self.indexes.copy()
         random.shuffle(shuffled_indexes)
         number_batches = len(self.indexes) // batch_size
@@ -28,11 +28,17 @@ class Client:
             batch = i % number_batches
             start = batch * batch_size
             end = (batch + 1) * batch_size
+            indexes = shuffled_indexes[start:end]
             x,y = self.train_data
-            x_batch = x[start:end]
-            y_batch = y[start:end]
+            x_batch = x[indexes]
+            y_batch = y[indexes]
             self.model.train_on_batch(x_batch, y_batch)
-        """
+
+        #for i in range(batches):
+        #    batch = np.random.randint(0, len(self.train_data[0]), size=batch_size)
+        #    x, y = self.train_data
+        #    self.model.train_on_batch(x[batch], y[batch])
+
     def get_train_data(self):
         return self.train_data
 

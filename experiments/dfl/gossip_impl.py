@@ -110,6 +110,7 @@ class ExchangeGossip(Trainer):
                 if exchange_pair not in exchanged:
                     #    self.recv_model(self.clients[client_idx], self.clients[nxt], batches=batches)
                     exchanged.append(exchange_pair)
+            #print(f"EXCHANGE: {exchanged}")
             # Do the actual exchanges.
             model_weights = [client.model.get_weights() for client in self.clients]
             old_models = [client.model for client in self.clients]
@@ -123,9 +124,13 @@ class ExchangeGossip(Trainer):
                 self.clients[p1].model = old_models[p2]
                 self.clients[p2].model = old_models[p1]
 #                self.clients[p1].model.set_weights([weight.copy() for weight in model_weights[p2]])
+#                self.clients[p2].model.set_weights([weight.copy() for weight in model_weights[p1]])
+
+#                self.clients[p1].model.optimizer.set_weights([weight.copy() for weight in old_models[p2].optimizer.get_weights()])
+#                self.clients[p2].model.optimizer.set_weights([weight.copy() for weight in old_models[p1].optimizer.get_weights()])
+
                 #print(f"Optimizer weights: {old_optimizer_weights}")
                 # self.clients[p1].model.optimizer = tf.keras.optimizers.Adam.from_config(optimizer_configs[p2])
-#                self.clients[p2].model.set_weights([weight.copy() for weight in model_weights[p1]])
 #                old_optimizer_weights = self.clients[p1].model.get_weights()
 #                self.clients[p1].model.set_weights([weight.copy() for weight in self.clients[p2].model.get_weights()])
 #                self.clients[p2].model.set_weights([weight.copy() for weight in old_optimizer_weights])
@@ -138,7 +143,7 @@ class ExchangeGossip(Trainer):
 
             if i % 100 == 0 and i != 0:
                 self.eval_train(i)
-            if i % 10 == 0 and i != 0:
+            if i % 10 == 0:
                 self.eval_test(i)
             Trainer.step(self)
 # 4323
