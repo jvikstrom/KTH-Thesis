@@ -3,4 +3,5 @@ pandas==1.1.5
 pydantic==1.8.1
 tensorflow-addons==0.11.1
 tensorflow-federated==0.17.0
+tqdm==4.31.1
 typer==0.3.2
