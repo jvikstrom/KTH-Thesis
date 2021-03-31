@@ -10,6 +10,22 @@ N=32
 Runs=5
 Batches=1
 Iters=5000
+
+print_usage() {
+  printf "Usage: -n <nodes> -r <runs> -b <batches> -i <iters>"
+}
+
+while getopts 'n:r:b:i:' flag; do
+  case "${flag}" in
+    n) N=${OPTARG} ;;
+    r) Runs=${OPTARG} ;;
+    b) Batches=${OPTARG} ;;
+    i) Iters=${OPTARG} ;;
+    *) print_usage
+       exit 1 ;;
+  esac
+done
+
 export DATA_DIR="data-32-1"
 cd dfl
 
