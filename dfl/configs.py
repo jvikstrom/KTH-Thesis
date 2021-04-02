@@ -142,3 +142,10 @@ def centralized_config(n: int, data_dir: str, learning_rate: float, batches: flo
         strategy=Centralized,
         optimizer=tf.optimizers.SGD,
     )
+
+
+def centralized_yogi_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
+    cfg = centralized_config(n,data_dir,learning_rate,batches,iterations)
+    cfg.optimizer = tfa.optimizers.Yogi
+    cfg.name += "-yogi"
+    return cfg

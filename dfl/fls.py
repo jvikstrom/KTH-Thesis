@@ -14,6 +14,10 @@ class FLS(Trainer):
             client.model.set_weights([weight.copy() for weight in self.clients[0].model.get_weights()])
 
     def run(self):
+        loss, accuracy = self.clients[0].model.evaluate(*self.test_concated, verbose=0, batch_size=32)
+        self.test_evals.append((-1, loss, accuracy))
+        print(f"FLS {-1} ::: loss: {loss}   ----   accuracy: {accuracy}")
+
         for i in range(self.trainer_config.iterations):
             # Does server SGD aggregation with server learning rate = 1.0
             for client in self.clients:

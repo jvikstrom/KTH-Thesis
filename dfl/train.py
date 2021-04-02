@@ -19,6 +19,7 @@ class Trainer:
         self.train_concated = concat_data([client.get_train_data() for client in self.clients])
         self.test_evals = []
         self.trainer_config = cfg
+        print(f"{len(self.train_concated[0])} number of train samples, {len(self.test_concated[0])} number of test samples")
 
     def __eval_data(self, data_set, epoch, data):
         losses, accuracies = [], []

@@ -2,8 +2,9 @@ import os
 import typer
 import tensorflow as tf
 from typing import Optional
-from configs import Config, none_gossip_config, exchange_cycle_config, exchange_config, aggregate_hypercube_config, fls_config, centralized_config, exchange_cycle_adam_config
+from configs import Config, none_gossip_config, exchange_cycle_config, exchange_config, aggregate_hypercube_config, fls_config, centralized_config, exchange_cycle_adam_config, centralized_yogi_config
 from emnist import run as run_emnist
+from shakespeare import run as run_shakespeare
 
 data_dir = os.getenv("DATA_DIR")
 if data_dir is None:
@@ -24,6 +25,7 @@ def load_config(strategy: str, n: int, data_dir: str, learning_rate: float, batc
         "agg-hypercube": aggregate_hypercube_config(n, data_dir, learning_rate, batches, iterations),
         "fls": fls_config(n, data_dir, learning_rate, batches, iterations),
         "centralized": centralized_config(n, data_dir, learning_rate, batches, iterations),
+        "centralized-yogi": centralized_yogi_config(n, data_dir, learning_rate, batches, iterations),
     }
     if strategy not in cfgs:
         raise AssertionError(f"'{strategy}' is not a valid strategy, must be one of: {cfgs.keys()}" )
@@ -37,6 +39,14 @@ def emnist(strategy: str, n: int, runs: int, batches: Optional[int] = typer.Argu
     cfg = load_config(strategy, n, data_dir, learning_rate, batches, iterations)
     for i in range(runs):
         run_emnist(cfg, i)
+
+
+@app.command()
+def shakespeare(strategy: str, n: int, runs: int, batches: Optional[int] = typer.Argument(1),
+           iterations: Optional[int] = typer.Argument(100), learning_rate: Optional[float] = typer.Argument(0.001)):
+    cfg = load_config(strategy, n, data_dir, learning_rate, batches, iterations)
+    for i in range(runs):
+        run_shakespeare(cfg, i)
 
 
 @app.command()

@@ -21,14 +21,6 @@ from configs import Config, none_gossip_config, exchange_cycle_config, exchange_
 
 def model_fn_factory(learning_rate, optimizer):
     def fn():
-        """            tf.keras.layers.Conv2D(32, 5, padding='same', activation='relu', input_shape=(28, 28, 1)),
-        tf.keras.layers.MaxPooling2D(pool_size=2, strides=2),
-        tf.keras.layers.Conv2D(64, 5, padding='same', activation='relu'),
-        tf.keras.layers.MaxPooling2D(pool_size=2, strides=2),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dense(62),
-"""
         model = tf.keras.models.Sequential([
             tf.keras.layers.Conv2D(32, 3, strides=(1, 1), input_shape=(28, 28, 1), activation='relu'),
             tf.keras.layers.Conv2D(64, 3, strides=(1, 1), activation='relu'),
@@ -103,6 +95,7 @@ if __name__ == "__main__":
     centralized_config = centralized_config(n=N, data_dir=data_dir, learning_rate=learning_rate, batches=batches,
                                             iterations=iterations)
     for i in range(number):
+        print(f"\n\n\n\n-------------------\nIteration {i}\n---------------------------\n\n\n\n\n")
         #        run(none_gossip_cfg, i)
         #        run(exchange_config, i)
         run(exchange_cycle_config, i)
@@ -112,7 +105,6 @@ if __name__ == "__main__":
 
         #        run_emnist(data_dir, f"agg-gossip", N, Gossip, learning_rate=learning_rate, batches=batches,
         #                   iterations=iterations, version=i)
-        print(f"\n\n\n\n-------------------\nIteration {i}\n---------------------------\n\n\n\n\n")
 """        run_emnist(data_dir, f"exchange-gossip", N, ExchangeGossip, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)
         run_emnist(data_dir, f"exchange-cycle", N, ExchangeGossip, learning_rate=learning_rate, guider=HamiltonCycleGuider, batches=batches, iterations=iterations, version=i)
         run_emnist(data_dir, f"agg-gossip", N, Gossip, learning_rate=learning_rate, batches=batches, iterations=iterations, version=i)
