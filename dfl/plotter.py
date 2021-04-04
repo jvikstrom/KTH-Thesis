@@ -3,6 +3,11 @@ from storage import read
 import matplotlib.pyplot as plt
 import seaborn as sb
 import numpy as np
+import argparse
+
+parser = argparse.ArgumentParser(description="Plot the data")
+parser.add_argument("--train", dest="train", action="store_const", const=True, default=False, help="Plot the training accuracy")
+parser.add_argument("--models", dest="models", action="store_const", const=True, default=False, help="Plot the model losses")
 
 sb.set_style('whitegrid')
 
@@ -17,9 +22,8 @@ files = os.listdir(directory)
 
 types = list(map(lambda x: x[:-4], files))
 
-
-if __name__ == "__main__":
-    dfs = [read(directory, name + ".csv") for name in types]
+def plot_test():
+    dfs = [read(directory, name + ".csv") for name in filter(lambda x: "-train" not in x and "-models" not in x, types)]
 
     accuracies = {}
     losses = {}
@@ -38,6 +42,8 @@ if __name__ == "__main__":
         sb.lineplot(y=accuracy, x=x, label=name)
         plt.fill_between(x, accuracy-stds, accuracy+stds, alpha=0.3)
 
+if __name__ == "__main__":
+    plot_test()
     plt.legend()
     plt.savefig("plot.png", bbox_inches='tight')
     plt.show()

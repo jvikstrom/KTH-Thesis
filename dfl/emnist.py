@@ -95,10 +95,10 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
             'current_iteration': iter,
         }
         for j in range(len(accuracies)):
-            di[f"{name}-{version}-accuracy-{j}"] = accuracies[j]
-            di[f"{name}-{version}-loss-{j}"] = losses[j]
+            di[f"{name}-accuracy-{j}"] = accuracies[j]
+            di[f"{name}-loss-{j}"] = losses[j]
         df = df.append(di, ignore_index=True)
-    storage.append(data_dir, name + '-models.csv', df)
+    storage.append(data_dir, f"{name}-{version}-models.csv", df)
 
 
 def run(cfg: Config, version: int):
