@@ -3,6 +3,8 @@ import pathlib
 
 
 def append(directory: str, name: str, dataframe: pd.DataFrame):
+    if len(dataframe) == 0:
+        return
     if directory:
         data_dir = pathlib.Path(directory)
 

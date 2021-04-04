@@ -68,6 +68,38 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
     print(f"Writing: {len(df)} records to {name}")
     storage.append(data_dir, name + ".csv", df)
 
+    df = pd.DataFrame()
+    for i in range(len(hyper.train_evals)):
+        iter, loss, accuracy = hyper.train_evals[i]
+        df = df.append({
+            'name': f"{name}-{version}",
+            'version': version,
+            'N': N,
+            #            'batches': batches,
+            #            'iterations': iterations,
+            'current_iteration': iter,
+            'loss': loss,
+            'accuracy': accuracy,
+        }, ignore_index=True)
+
+    print(f"Writing: {len(df)} records to {name}-train")
+    storage.append(data_dir, name + "-train.csv", df)
+
+    df = pd.DataFrame()
+    for i in range(len(hyper.test_model_stats)):
+        iter, accuracies, losses = hyper.test_model_stats[i]
+        di = {
+            'name': f"{name}-{version}",
+            'version': version,
+            'N': N,
+            'current_iteration': iter,
+        }
+        for j in range(len(accuracies)):
+            di[f"{name}-{version}-accuracy-{j}"] = accuracies[j]
+            di[f"{name}-{version}-loss-{j}"] = losses[j]
+        df = df.append(di, ignore_index=True)
+    storage.append(data_dir, name + '-models.csv', df)
+
 
 def run(cfg: Config, version: int):
     run_emnist(cfg.data_dir, cfg.name, cfg.N, cfg.strategy, cfg, learning_rate=cfg.learning_rate,

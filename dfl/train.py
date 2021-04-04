@@ -1,10 +1,11 @@
 import numpy as np
-from typing import List
+from typing import List, Callable
 from tqdm import tqdm
 from client import Client
 from dataset import concat_data
 import gc
 from pydantic import BaseModel
+from storage import append
 
 
 class TrainerConfig(BaseModel):
@@ -18,6 +19,8 @@ class Trainer:
         self.test_concated = concat_data([client.get_test_data() for client in self.clients])
         self.train_concated = concat_data([client.get_train_data() for client in self.clients])
         self.test_evals = []
+        self.test_model_stats = []
+        self.train_evals = []
         self.trainer_config = cfg
         print(f"{len(self.train_concated[0])} number of train samples, {len(self.test_concated[0])} number of test samples")
 
@@ -32,19 +35,19 @@ class Trainer:
             loss, accuracy = client.model.evaluate(*data, verbose=0, batch_size=32)
             losses.append(loss)
             accuracies.append(accuracy)
-        loss = np.mean(losses)
-        accuracy = np.mean(accuracies)
-        #diff = np.max(accuracies) - np.min(accuracies)
-        print(f"{data_set} {epoch} ::: loss: {loss}   ----   accuracy: {accuracy}")
-        #print(f"{data_set} {epoch} ::: accuracy diff: {diff}")
-        return loss, accuracy
+        print(f"{data_set} {epoch} ::: loss: {np.mean(losses)}   ----   accuracy: {np.mean(accuracies)}")
+        return losses, accuracies
 
     def eval_test(self, epoch):
-        loss, accuracy = self.__eval_data("TEST", epoch, self.test_concated)
-        self.test_evals.append((epoch, loss, accuracy))
+        losses, accuracies = self.__eval_data("TEST", epoch, self.test_concated)
+        self.test_model_stats.append((epoch, losses, accuracies))
+        self.test_evals.append((epoch, np.mean(losses), np.mean(accuracies)))
 
     def eval_train(self, epoch):
-        return self.__eval_data("TRAIN", epoch, self.train_concated)
+        losses, accuracies = self.__eval_data("TRAIN", epoch, self.train_concated)
+        loss, accuracy = np.mean(losses), np.mean(accuracies)
+        self.train_evals.append((epoch, loss, accuracy))
+        return loss, accuracy
 
     def run(self):
         pass
