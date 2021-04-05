@@ -79,6 +79,8 @@ def _shortcut(input, residual):
 
     shortcut = input
     # 1 X 1 conv if shape is different. Else identity.
+    if stride_width == 0 or stride_height == 0:
+        raise AssertionError(f"Stride is 0: width {stride_width}, height {stride_height}, {input_shape[COL_AXIS]}, {residual_shape[COL_AXIS]}")
     if stride_width > 1 or stride_height > 1 or not equal_channels:
         shortcut = Conv2D(filters=residual_shape[CHANNEL_AXIS],
                           kernel_size=(1, 1),
@@ -160,13 +162,13 @@ def _handle_dim_ordering():
     global COL_AXIS
     global CHANNEL_AXIS
 #    if K.image_dim_ordering() == 'tf':
-#        ROW_AXIS = 1
-#        COL_AXIS = 2
-#        CHANNEL_AXIS = 3
+    ROW_AXIS = 1
+    COL_AXIS = 2
+    CHANNEL_AXIS = 3
 #    else:
-    CHANNEL_AXIS = 1
-    ROW_AXIS = 2
-    COL_AXIS = 3
+#    CHANNEL_AXIS = 1
+#    ROW_AXIS = 2
+#    COL_AXIS = 3
 
 
 def _get_block(identifier):
@@ -200,7 +202,7 @@ class ResnetBuilder(object):
 
         # Permute dimension order if necessary
 #        if K.image_dim_ordering() == 'tf':
-#            input_shape = (input_shape[1], input_shape[2], input_shape[0])
+        input_shape = (input_shape[1], input_shape[2], input_shape[0])
 
         # Load function from str if needed.
         block_fn = _get_block(block_fn)

@@ -34,7 +34,7 @@ def model_fn_factory(learning_rate, optimizer):
             # tf.keras.layers.Dropout(0.5),
             # tf.keras.layers.Dense(62, activation='softmax'),
 #        ])
-        model = ResnetBuilder.build_resnet_18((3,32,32), 100)
+        model = ResnetBuilder.build_resnet_18((32,32,3), 100)
 
         model.compile(optimizer=optimizer(learning_rate),
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),

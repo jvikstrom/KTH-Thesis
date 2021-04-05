@@ -19,12 +19,10 @@ def load_from_cifar(source, id):
     data: tf.data.Dataset = source.create_tf_dataset_for_client(source.client_ids[id]).map(
         lambda e: (tf.reshape(e['image'], [-1]), e['label'])
     )
-    print("data", data)
 
     images, labels = [], []
     for image, label in data.as_numpy_iterator():
-        print('image:', image)
-        images.append(image.reshape(32, 32, 3, 1))
+        images.append(image.reshape(32, 3, 32, 1))
         labels.append(label)
 
     return np.array(images), np.array(labels)
