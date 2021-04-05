@@ -15,6 +15,20 @@ def load_from_emnist(source, id):
     return np.array(images), np.array(labels)
 
 
+def load_from_cifar(source, id):
+    data: tf.data.Dataset = source.create_tf_dataset_for_client(source.client_ids[id]).map(
+        lambda e: (tf.reshape(e['pixels'], [-1]), e['label'])
+    )
+
+    images, labels = [], []
+    for image, label in data.as_numpy_iterator():
+        print('image:', image)
+        images.append(image.reshape(32, 32, 3, 1))
+        labels.append(label)
+
+    return np.array(images), np.array(labels)
+
+
 SHAKESPEARE_LINE_BEGIN = '^'
 SHAKESPEARE_OUT_OF_VOCAB = '~'
 SHAKESPEARE_BOL = '<'
