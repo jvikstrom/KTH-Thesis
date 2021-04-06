@@ -6,7 +6,7 @@ import numpy as np
 import argparse
 
 parser = argparse.ArgumentParser(description="Plot the data")
-parser.add_argument("--train", dest="train", action="store_const", const=True, default=False, help="Plot the training accuracy")
+parser.add_argument("--train", dest="plot_train", action="store_const", const=True, default=False, help="Plot the training accuracy")
 parser.add_argument("--models", dest="models", action="store_const", const=True, default=False, help="Plot the model losses")
 parser.add_argument("--max-iter", dest="max_iter")
 parser.add_argument("--title", dest="title", default="")
@@ -26,12 +26,19 @@ files = os.listdir(directory)
 
 types = list(map(lambda x: x[:-4], files))
 
-def plot_test():
-    dfs = [read(directory, name + ".csv") for name in filter(lambda x: "-train" not in x and "-models" not in x, types)]
+print('read: ', [name for name in filter(lambda x: "-train" not in x and "-models" not in x, types)])
+
+
+def plot_accuracy():
+    if not args.plot_train:
+        names = [name for name in filter(lambda x: "-train" not in x and "-models" not in x, types)]
+    else:
+        names = [name for name in filter(lambda x: "-train" in x and "-models" not in x, types)]
+    dfs = [read(directory, name + ".csv") for name in names]
 
     accuracies = {}
     losses = {}
-    for name, df in zip(types, dfs):
+    for name, df in zip(names, dfs):
         grouped = df.groupby(["current_iteration"])
         if args.max_iter is not None:
             grouped = df[df.current_iteration < int(args.max_iter)]
@@ -53,7 +60,7 @@ def plot_test():
 # Plot contains the mean accuracy of the node's models. Each model
 
 if __name__ == "__main__":
-    plot_test()
+    plot_accuracy()
     plt.legend()
     plt.savefig("plot.png", bbox_inches='tight')
     plt.show()
