@@ -6,6 +6,7 @@ from client import Client, Guider
 from train import Trainer, TrainerConfig
 from pydantic import BaseModel
 
+
 def recv_model(sender: Tuple[int, Client], receiver: Tuple[int, Client], batches=1) -> int:
     # Implements the MergeAverage.
     # Merge the model to receiver.
@@ -59,6 +60,8 @@ class Gossip(Trainer):
 
     def run(self):
         for i in range(self.trainer_config.iterations):
+            Trainer.step_and_eval(self, i)
+
             old_weights = [client.model.get_weights() for client in self.clients]
             for client_idx in tqdm(range(len(self.clients))):
                 nxt = self.guider.next(client_idx)
@@ -79,12 +82,11 @@ class Gossip(Trainer):
                 self.clients[nxt].train(self.trainer_config.batches)
             # if i % 50 == 0 and i != 0:
             #    self.eval_train(i)
-            if i % 1 == 0 and i != 0:
-                self.eval_test(i)
             # a_weights = self.clients[0].model.get_weights()
             # for a_weight in a_weights:
             #    print(f"mean:{a_weight.mean()}, max:{a_weight.max()}, min:{a_weight.min()}, std:{a_weight.std()}")
-            Trainer.step(self)
+#            Trainer.step(self)
+        Trainer.step_and_eval(self, self.trainer_config.iterations)
 
 
 class ExchangeConfig(BaseModel):
@@ -102,6 +104,7 @@ class ExchangeGossip(Trainer):
 
     def run(self):
         for i in range(self.trainer_config.iterations):
+            Trainer.step_and_eval(self, i)
             exchanged = []
             for client_idx in range(len(self.clients)):
                 nxt = self.guider.next(client_idx)
@@ -129,9 +132,6 @@ class ExchangeGossip(Trainer):
             for client in tqdm(self.clients):
                 client.train(self.trainer_config.batches)
 
-            if i % 100 == 0 and i != 0:
-                self.eval_train(i)
-            if i % 10 == 0:
-                self.eval_test(i)
-            Trainer.step(self)
+        Trainer.step_and_eval(self, self.trainer_config.iterations)
+
 # 4323

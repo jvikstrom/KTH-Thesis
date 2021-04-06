@@ -7,11 +7,7 @@ class Centralized(Trainer):
         self.model = self.clients[0].model
 
     def run(self):
-        loss, accuracy = self.model.evaluate(*self.test_concated, verbose=0, batch_size=32)
-        print(f"FLS {-1} ::: loss: {loss}   ----   accuracy: {accuracy}")
         for i in range(self.trainer_config.iterations):
+            Trainer.step_and_eval(self, i, model=self.model)
             self.model.fit(*self.train_concated, verbose=0, batch_size=32)
-            loss, accuracy = self.model.evaluate(*self.test_concated, verbose=0, batch_size=32)
-            print(f"CENTRALIZED ::: ({i}) loss: {loss} ---- accuracy: {accuracy}")
-            self.test_evals.append((i, loss, accuracy))
-            Trainer.step(self)
+        Trainer.step_and_eval(self, self.trainer_config.iterations, model=self.model)

@@ -42,6 +42,7 @@ class Hypercube(Trainer):
 
     def run(self):
         for i in range(self.trainer_config.iterations):
+            Trainer.step_and_eval(self, i)
             for client in tqdm(self.clients, desc="train"):
                 client.train(batches=self.trainer_config.batches)
 
@@ -55,14 +56,7 @@ class Hypercube(Trainer):
             correct_weights = [weight.copy() for weight in client_weights[0]]
             for client in self.clients:
                 client.model.set_weights([weight.copy() for weight in correct_weights])
-            if i % 100 == 0 and i != 0:
-                self.eval_train(i)
-            if i % 1 == 0:
-                self.eval_test(i)
-            #a_weights = self.clients[0].model.get_weights()
-            #for a_weight in a_weights:
-            #    print(f"mean:{a_weight.mean()}, max:{a_weight.max()}, min:{a_weight.min()}, std:{a_weight.std()}")
-        Trainer.step(self)
+        Trainer.step_and_eval(self, self.trainer_config.iterations)
 
 
 class HamiltonCycleGuider(Guider):

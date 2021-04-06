@@ -15,6 +15,7 @@ class FLS(Trainer):
 
     def run(self):
         for i in range(self.trainer_config.iterations):
+            Trainer.step_and_eval(self, i, model=self.clients[0].model)
             # Does server SGD aggregation with server learning rate = 1.0
             for client in tqdm(self.clients):
                 client.train(self.trainer_config.batches)
@@ -32,7 +33,5 @@ class FLS(Trainer):
 
             for client in self.clients:
                 client.model.set_weights([weight.copy() for weight in aggregated_weights])
-            loss, accuracy = self.clients[0].model.evaluate(*self.test_concated, verbose=0, batch_size=32)
-            self.test_evals.append((i, loss, accuracy))
-            print(f"FLS {i} ::: loss: {loss}   ----   accuracy: {accuracy}")
-            Trainer.step(self)
+# TODO: Move everything to step_and_eval
+        Trainer.step_and_eval(self, self.trainer_config.iterations, model=self.clients[0].model)

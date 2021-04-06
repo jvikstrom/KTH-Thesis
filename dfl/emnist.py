@@ -87,7 +87,7 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
 
     df = pd.DataFrame()
     for i in range(len(hyper.test_model_stats)):
-        iter, accuracies, losses = hyper.test_model_stats[i]
+        iter, losses, accuracies = hyper.test_model_stats[i]
         di = {
             'name': f"{name}-{version}",
             'version': version,
