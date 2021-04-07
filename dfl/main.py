@@ -6,6 +6,7 @@ from configs import Config, none_gossip_config, exchange_cycle_config, exchange_
 from emnist import run as run_emnist
 from shakespeare import run as run_shakespeare
 from cifar import run as run_cifar
+from nn5 import run as run_nn5
 
 data_dir = os.getenv("DATA_DIR")
 if data_dir is None:
@@ -41,12 +42,25 @@ def emnist(strategy: str, n: int, runs: int, batches: Optional[int] = typer.Argu
     for i in range(runs):
         run_emnist(cfg, i)
 
+
+@app.command()
+def nn5(strategy: str, n: int, runs: int, batches: Optional[int] = typer.Argument(1),
+           iterations: Optional[int] = typer.Argument(100), learning_rate: Optional[float] = typer.Argument(0.001)):
+    nn5_path = os.getenv("NN5_PATH")
+    if nn5_path is None:
+        raise AssertionError("Must specify the 'NN5_PATH' env variable to the nn5 data csv.")
+    cfg = load_config(strategy, n, data_dir, learning_rate, batches, iterations)
+    for i in range(runs):
+        run_nn5(nn5_path, cfg, i)
+
+
 @app.command()
 def cifar(strategy: str, n: int, runs: int, batches: Optional[int] = typer.Argument(1),
            iterations: Optional[int] = typer.Argument(100), learning_rate: Optional[float] = typer.Argument(0.001)):
     cfg = load_config(strategy, n, data_dir, learning_rate, batches, iterations)
     for i in range(runs):
         run_cifar(cfg, i)
+
 
 @app.command()
 def shakespeare(strategy: str, n: int, runs: int, batches: Optional[int] = typer.Argument(1),
