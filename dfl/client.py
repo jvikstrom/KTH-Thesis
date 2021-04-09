@@ -42,6 +42,7 @@ class Client:
     def set_data(self, train, test):
         self.test_data = test
         self.train_data = train
+        self.indexes = np.arange(0, len(self.train_data[0]))
 
     def get_train_data(self):
         return self.train_data
