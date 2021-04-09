@@ -7,6 +7,7 @@ from emnist import run as run_emnist
 from shakespeare import run as run_shakespeare
 from cifar import run as run_cifar
 from nn5 import run as run_nn5
+import json
 
 data_dir = os.getenv("DATA_DIR")
 if data_dir is None:
@@ -14,6 +15,8 @@ if data_dir is None:
 
 for gpu in tf.config.list_physical_devices('GPU'):
     tf.config.experimental.set_memory_growth(gpu, True)
+
+failure_schedule_path = os.getenv("FAIL_PATH")
 
 app = typer.Typer()
 
@@ -39,8 +42,12 @@ def load_config(strategy: str, n: int, data_dir: str, learning_rate: float, batc
 def emnist(strategy: str, n: int, runs: int, batches: Optional[int] = typer.Argument(1),
            iterations: Optional[int] = typer.Argument(100), learning_rate: Optional[float] = typer.Argument(0.001)):
     cfg = load_config(strategy, n, data_dir, learning_rate, batches, iterations)
+    fail_schd = None
+    if failure_schedule_path is not None:
+        with open(failure_schedule_path, 'r') as f:
+            fail_schd = json.loads(f.read())
     for i in range(runs):
-        run_emnist(cfg, i)
+        run_emnist(cfg, i, failure_schedule=fail_schd)
 
 
 @app.command()

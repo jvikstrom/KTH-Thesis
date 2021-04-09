@@ -51,8 +51,8 @@ class GossipConfig(BaseModel):
 
 
 class Gossip(Trainer):
-    def __init__(self, clients: List[Client], cfg: GossipConfig, all_train, all_test):
-        Trainer.__init__(self, clients, cfg.base_config.trainer_config, all_train, all_test)
+    def __init__(self, clients: List[Client], cfg: GossipConfig, all_train, all_test, failure_schedule=None):
+        Trainer.__init__(self, clients, cfg.base_config.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
         self.versions = [1 for _ in range(len(clients))]
         self.guider = cfg.base_config.guider(clients)
         self.recv_model = recv_model
@@ -80,12 +80,6 @@ class Gossip(Trainer):
                 self.versions[nxt] = t+1
                 self.clients[nxt].model.set_weights([weight.copy() for weight in send_weights])
                 self.clients[nxt].train(self.trainer_config.batches)
-            # if i % 50 == 0 and i != 0:
-            #    self.eval_train(i)
-            # a_weights = self.clients[0].model.get_weights()
-            # for a_weight in a_weights:
-            #    print(f"mean:{a_weight.mean()}, max:{a_weight.max()}, min:{a_weight.min()}, std:{a_weight.std()}")
-#            Trainer.step(self)
         Trainer.step_and_eval(self, self.trainer_config.iterations)
 
 
@@ -96,8 +90,8 @@ class ExchangeConfig(BaseModel):
 
 
 class ExchangeGossip(Trainer):
-    def __init__(self, clients: List[Client], cfg: ExchangeConfig, all_train, all_test):
-        Trainer.__init__(self, clients, cfg.base_config.trainer_config, all_train, all_test)
+    def __init__(self, clients: List[Client], cfg: ExchangeConfig, all_train, all_test, failure_schedule=None):
+        Trainer.__init__(self, clients, cfg.base_config.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
         self.guider = cfg.base_config.guider(clients)
         self.recv_model = exchange_recv_model
         self.config = cfg
@@ -115,6 +109,7 @@ class ExchangeGossip(Trainer):
                     exchanged.append(exchange_pair)
             # Do the actual exchanges.
             model_weights = [client.model.get_weights() for client in self.clients]
+            optimizer_weights = [client.model.optimizer.get_weights() for client in self.clients]
             old_models = [client.model for client in self.clients]
             optimizer_configs = [client.model.optimizer.get_config() for client in self.clients]
             for p1, p2 in exchanged:
@@ -122,6 +117,11 @@ class ExchangeGossip(Trainer):
                 if self.config.swap_optimizer:
                     self.clients[p1].model = old_models[p2]
                     self.clients[p2].model = old_models[p1]
+                    # TODO: For this to work we probably need to send the slots as well..
+#                    self.clients[p1].model.set_weights([weight.copy() for weight in model_weights[p2]])
+#                    self.clients[p2].model.set_weights([weight.copy() for weight in model_weights[p1]])
+#                    self.clients[p1].model.optimizer.set_weights([weight.copy() for weight in optimizer_weights[p2]])
+#                    self.clients[p2].model.optimizer.set_weights([weight.copy() for weight in optimizer_weights[p1]])
                 else:
                     self.clients[p1].model.set_weights([weight.copy() for weight in model_weights[p2]])
                     self.clients[p2].model.set_weights([weight.copy() for weight in model_weights[p1]])

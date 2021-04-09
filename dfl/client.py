@@ -39,6 +39,10 @@ class Client:
         #    x, y = self.train_data
         #    self.model.train_on_batch(x[batch], y[batch])
 
+    def set_data(self, train, test):
+        self.test_data = test
+        self.train_data = train
+
     def get_train_data(self):
         return self.train_data
 

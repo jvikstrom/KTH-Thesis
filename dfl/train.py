@@ -14,15 +14,28 @@ class TrainerConfig(BaseModel):
 
 
 class Trainer:
-    def __init__(self, clients: List[Client], cfg: TrainerConfig, all_train_data, all_test_data):
+    def __init__(self, clients: List[Client], cfg: TrainerConfig, all_train_data, all_test_data, failure_schedule=None):
         self.clients = clients
+        self.all_test_data = all_test_data
+        self.all_train_data = all_train_data
         self.test_concated = concat_data(all_test_data)
+#        self.test_concated = concat_data([client.get_test_data() for client in self.clients])
+
         self.train_concated = concat_data([client.get_train_data() for client in self.clients])
         self.test_evals = []
         self.test_model_stats = []
         self.train_evals = []
         self.trainer_config = cfg
         print(f"{len(self.train_concated[0])} number of train samples, {len(self.test_concated[0])} number of test samples")
+        if failure_schedule is not None:
+            self._fail_per_iter = failure_schedule['fail']
+            self._alive_per_iter = failure_schedule['alive']
+            self._join_per_iter = failure_schedule['join']
+        else:
+            self._fail_per_iter = []
+            self._alive_per_iter = []
+            self._join_per_iter = []
+        self.currently_alive = list(range(len(clients)))
 
     def __eval_data(self, data_set, epoch, data, model=None):
         losses, accuracies = [], []
@@ -57,13 +70,21 @@ class Trainer:
     def run(self):
         pass
 
-    def step(self):
+    def step(self, epoch):
         # Python doesn't do a full collect otherwise, causing us to eventually run out of memory.
         gc.collect()
+        # Recalculate what's alive.
+        if epoch >= len(self._fail_per_iter) - 1:
+            return
+        for die_idx, new_client_idx, join_by in zip(self._fail_per_iter[epoch], self._alive_per_iter[epoch], self._join_per_iter[epoch]):
+            self.clients[die_idx].set_data(self.all_train_data[new_client_idx], self.all_test_data[new_client_idx])
+            self.clients[die_idx].model.set_weights([weights.copy() for weights in self.clients[join_by].model.get_weights()])
 
     def step_and_eval(self, epoch, model=None):
         if epoch % 10 == 0:
             self.eval_test(epoch, model=model)
-        if epoch % 50 == 0:
+        if epoch % 100 == 0:
             self.eval_train(epoch, model=model)
-        self.step()
+        self.step(epoch)
+
+

@@ -34,8 +34,8 @@ class HypercubeConfig(BaseModel):
 
 
 class Hypercube(Trainer):
-    def __init__(self, clients: List[Client], cfg: HypercubeConfig, all_train, all_test):
-        Trainer.__init__(self, clients, cfg.trainer_config, all_train, all_test)
+    def __init__(self, clients: List[Client], cfg: HypercubeConfig, all_train, all_test, failure_schedule=None):
+        Trainer.__init__(self, clients, cfg.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
         for client in self.clients:
             client.model.set_weights([weight.copy() for weight in clients[0].model.get_weights()])
         self.rounds = preprocess_client_targets(clients)

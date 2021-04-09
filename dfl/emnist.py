@@ -39,16 +39,27 @@ def model_fn_factory(learning_rate, optimizer):
 
     return fn
 
+# Exchange cycle adam 1 at 100: (train, test): (0.347, 0.293)
+# Exchange cycle adam 2 at 100: (train, test): (0.463, 0.393)
+# Exchange cycle adam 3 at 100: (train, test): (0.498, 0.415)
+# Exchange cycle adam 4 at 100: (train, test): (0.402, 0.345)
 
-def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate, version=1):
-    data_fac = 0.25
+
+# Exchange cycle adam weights 1 at 100: (train, test): (0.431, 0.373)
+# Exchange cycle adam weights 2 at 100: (train, test): (0.612, 0.516)
+# Exchange cycle adam weights 3 at 100: (train, test): (0.277, 0.243)
+# Exchange cycle adam weights 4 at 100: (train, test): (0.671, 0.599)
+
+
+def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate, version=1, failure_schedule=None):
+    data_fac = 0.1
     # Load simulation data.
     train, test = tff.simulation.datasets.emnist.load_data(only_digits=False)
     print("Loading data into memory.")
     all_train_data, all_test_data = [], []
     for i in tqdm(range(int(len(train.client_ids) * data_fac)), desc="Loading data"):
-        all_test_data.append(load_from_emnist(train, i))
-        all_train_data.append(load_from_emnist(test, i))
+        all_train_data.append(load_from_emnist(train, i))
+        all_test_data.append(load_from_emnist(test, i))
 
     print("Loaded all data.")
     clients = [Client(
@@ -57,7 +68,7 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
         model_fn_factory(learning_rate, cfg.optimizer)
     ) for i in range(N)]
 
-    hyper = strategy(clients, cfg.extra_config, all_train_data, all_test_data)
+    hyper = strategy(clients, cfg.extra_config, all_train_data, all_test_data, failure_schedule=failure_schedule)
     print(f"Start running {name}...")
     hyper.run()
     df = pd.DataFrame()
@@ -110,9 +121,9 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
     storage.append(data_dir, f"{name}-{version}-models.csv", df)
 
 
-def run(cfg: Config, version: int):
+def run(cfg: Config, version: int, failure_schedule=None):
     run_emnist(cfg.data_dir, cfg.name, cfg.N, cfg.strategy, cfg, learning_rate=cfg.learning_rate,
-               version=version)
+               version=version, failure_schedule=failure_schedule)
 
 
 if __name__ == "__main__":
