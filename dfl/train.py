@@ -28,7 +28,7 @@ class Trainer:
         self.trainer_config = cfg
         print(f"{len(self.train_concated[0])} number of train samples, {len(self.test_concated[0])} number of test samples")
         if failure_schedule is not None:
-            self._fail_per_iter = failure_schedule['fail']
+            self._fail_per_iter = failure_schedule['fails']
             self._alive_per_iter = failure_schedule['alive']
             self._join_per_iter = failure_schedule['join']
         else:
