@@ -53,6 +53,8 @@ def model_fn_factory(learning_rate, optimizer):
 
 def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate, version=1, failure_schedule=None):
     data_fac = os.getenv("PERC_DATA")
+    if data_fac is not None:
+        data_fac = float(data_fac)
     if data_fac is None:
         data_fac = 0.1
     # Load simulation data.
