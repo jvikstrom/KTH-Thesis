@@ -22,6 +22,9 @@ class Client:
         shuffled_indexes = self.indexes.copy()
         random.shuffle(shuffled_indexes)
         number_batches = len(self.indexes) // batch_size
+        if number_batches == 0:
+            print("There is a client with 0 batches!")
+            return
         for i in range(batches):
             #batch = np.random.choice(self.indexes, batch_size)
             #print(f"batch: {batch}")
