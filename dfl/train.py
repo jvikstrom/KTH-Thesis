@@ -14,9 +14,9 @@ class TrainerConfig(BaseModel):
 
 
 class Trainer:
-    def __init__(self, clients: List[Client], cfg: TrainerConfig):
+    def __init__(self, clients: List[Client], cfg: TrainerConfig, all_train_data, all_test_data):
         self.clients = clients
-        self.test_concated = concat_data([client.get_test_data() for client in self.clients])
+        self.test_concated = concat_data(all_test_data)
         self.train_concated = concat_data([client.get_train_data() for client in self.clients])
         self.test_evals = []
         self.test_model_stats = []

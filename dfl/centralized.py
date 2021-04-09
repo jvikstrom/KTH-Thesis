@@ -2,8 +2,8 @@ from train import Trainer
 
 
 class Centralized(Trainer):
-    def __init__(self, clients, cfg):
-        Trainer.__init__(self, clients, cfg)
+    def __init__(self, clients, cfg, all_train, all_test):
+        Trainer.__init__(self, clients, cfg, all_train, all_test)
         self.model = self.clients[0].model
 
     def run(self):

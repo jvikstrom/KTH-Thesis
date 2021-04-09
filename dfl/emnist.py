@@ -41,15 +41,24 @@ def model_fn_factory(learning_rate, optimizer):
 
 
 def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate, version=1):
+    data_fac = 0.25
     # Load simulation data.
     train, test = tff.simulation.datasets.emnist.load_data(only_digits=False)
+    print("Loading data into memory.")
+    all_train_data, all_test_data = [], []
+    for i in tqdm(range(int(len(train.client_ids) * data_fac)), desc="Loading data"):
+        all_test_data.append(load_from_emnist(train, i))
+        all_train_data.append(load_from_emnist(test, i))
+
+    print("Loaded all data.")
     clients = [Client(
-        load_from_emnist(train, i),
-        load_from_emnist(test, i),
+        all_train_data[i],
+        all_test_data[i],
         model_fn_factory(learning_rate, cfg.optimizer)
     ) for i in range(N)]
 
-    hyper = strategy(clients, cfg.extra_config)
+    hyper = strategy(clients, cfg.extra_config, all_train_data, all_test_data)
+    print(f"Start running {name}...")
     hyper.run()
     df = pd.DataFrame()
     for i in range(len(hyper.test_evals)):

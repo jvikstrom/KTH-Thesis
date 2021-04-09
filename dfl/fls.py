@@ -8,8 +8,8 @@ class FLSConfig(BaseModel):
 
 
 class FLS(Trainer):
-    def __init__(self, clients, cfg: FLSConfig):
-        Trainer.__init__(self, clients, cfg.trainer_config)
+    def __init__(self, clients, cfg: FLSConfig, all_train, all_test):
+        Trainer.__init__(self, clients, cfg.trainer_config, all_train, all_test)
         for client in self.clients:
             client.model.set_weights([weight.copy() for weight in self.clients[0].model.get_weights()])
 

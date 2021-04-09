@@ -51,8 +51,8 @@ class GossipConfig(BaseModel):
 
 
 class Gossip(Trainer):
-    def __init__(self, clients: List[Client], cfg: GossipConfig):
-        Trainer.__init__(self, clients, cfg.base_config.trainer_config)
+    def __init__(self, clients: List[Client], cfg: GossipConfig, all_train, all_test):
+        Trainer.__init__(self, clients, cfg.base_config.trainer_config, all_train, all_test)
         self.versions = [1 for _ in range(len(clients))]
         self.guider = cfg.base_config.guider(clients)
         self.recv_model = recv_model
@@ -96,8 +96,8 @@ class ExchangeConfig(BaseModel):
 
 
 class ExchangeGossip(Trainer):
-    def __init__(self, clients: List[Client], cfg: ExchangeConfig):
-        Trainer.__init__(self, clients, cfg.base_config.trainer_config)
+    def __init__(self, clients: List[Client], cfg: ExchangeConfig, all_train, all_test):
+        Trainer.__init__(self, clients, cfg.base_config.trainer_config, all_train, all_test)
         self.guider = cfg.base_config.guider(clients)
         self.recv_model = exchange_recv_model
         self.config = cfg
