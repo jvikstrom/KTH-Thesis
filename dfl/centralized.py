@@ -9,5 +9,5 @@ class Centralized(Trainer):
     def run(self):
         for i in range(self.trainer_config.iterations):
             Trainer.step_and_eval(self, i, model=self.model)
-            self.model.fit(*self.train_concated, verbose=0, batch_size=32)
+            self.model.fit(*self.train_concated, verbose=1, batch_size=32)
         Trainer.step_and_eval(self, self.trainer_config.iterations, model=self.model)

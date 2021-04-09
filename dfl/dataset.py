@@ -13,19 +13,22 @@ class NN5Source:
                     try:
                         values[i] = float(values[i])
                     except ValueError:
-                        values[i] = None
+                        values[i] = 0.0
                         continue
                 if len(values) < 10:
                     continue
                 raw_data.append(values)
+
+        # Normalize the data. Didn't really work that well...
+#        mean = np.mean(raw_data)
+#        raw_data = np.array(raw_data) - mean
+#        raw_data = raw_data / np.std(raw_data)
 
         time_series_train = [[] for _ in range(len(raw_data[0]))]
         time_series_test = [[] for _ in range(len(raw_data[0]))]
         for j in range(len(raw_data)):
             nn5 = raw_data[j]
             for i in range(len(nn5)):
-                if nn5[i] is None:
-                    continue
                 if j < len(raw_data) - 56:
                     time_series_train[i].append(nn5[i])
                 else:
@@ -42,7 +45,7 @@ def load_from_nn5(source: NN5Source, id, test=False, input_size=56):
     for i in range(len(train)-input_size+1):
         inputs.append(train[i:i+input_size])
     if test:
-        return np.array(inputs[len(inputs)-1]), np.array([source.time_series_test[id]])
+        return np.array([inputs[len(inputs)-1]]).reshape((-1,input_size, 1)), np.array([source.time_series_test[id]]).reshape((-1,output_size, 1))
 
     outputs = []
     for i in range(input_size, len(train)-output_size+1):
@@ -53,7 +56,7 @@ def load_from_nn5(source: NN5Source, id, test=False, input_size=56):
         train_inputs.append(inputs[i])
         labels.append(outputs[i])
 
-    return np.array(train_inputs), np.array(labels)
+    return np.array(train_inputs).reshape((-1,input_size, 1)), np.array(labels).reshape((-1,output_size, 1))
 
 
 def load_from_emnist(source, id):

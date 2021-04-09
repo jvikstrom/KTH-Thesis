@@ -70,6 +70,9 @@ def plot_accuracy():
             if max_iter < j + 100:
                 accum += ac
                 t += 1
+        if t == 0:
+            print(f"{name} has no entries!")
+            continue
         end_accuracies[name] = accum / t
     print(end_accuracies)
 # Plot contains the mean accuracy of the node's models. Each model
