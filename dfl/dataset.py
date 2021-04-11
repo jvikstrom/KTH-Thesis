@@ -37,6 +37,8 @@ class NN5Source:
         self.time_series_train = [np.array(v) for v in time_series_train]
         self.time_series_test = [np.array(v) for v in time_series_test]
 
+    def n_clients(self):
+        return 111
 
 def load_from_nn5(source: NN5Source, id, test=False, input_size=56):
     output_size = 56

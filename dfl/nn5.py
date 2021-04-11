@@ -66,13 +66,18 @@ def model_fn_factory(learning_rate, optimizer):
 def run_nn5(nn5_file_path: str, data_dir: str, name: str, N, strategy, cfg: Config, learning_rate, version=1):
     # Load simulation data.
     nn5source = NN5Source(nn5_file_path)
+    all_train_data = []
+    all_test_data = []
+    for i in range(nn5source.n_clients()):
+        all_train_data.append(load_from_nn5(nn5source, i))
+        all_test_data.append(load_from_nn5(nn5source, i, test=True))
     clients = [Client(
-        load_from_nn5(nn5source, i),
-        load_from_nn5(nn5source, i, test=True),
+        all_train_data[i],
+        all_test_data[i],
         model_fn_factory(learning_rate, cfg.optimizer)
     ) for i in range(N)]
 
-    hyper = strategy(clients, cfg.extra_config)
+    hyper = strategy(clients, cfg.extra_config, np.array(all_train_data), np.array(all_test_data))
     hyper.run()
     df = pd.DataFrame()
     for i in range(len(hyper.test_evals)):

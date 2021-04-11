@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sb
 import numpy as np
 import argparse
+# KDEplot: https://seaborn.pydata.org/generated/seaborn.kdeplot.html
 
 parser = argparse.ArgumentParser(description="Plot the data")
 parser.add_argument("--train", dest="plot_train", action="store_const", const=True, default=False, help="Plot the training accuracy")
