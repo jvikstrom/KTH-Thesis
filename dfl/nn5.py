@@ -85,54 +85,6 @@ def run_nn5(nn5_file_path: str, data_dir: str, name: str, N, strategy, cfg: Conf
             eval_train_gap=50,
             disable_tqdm=cfg.disable_tqdm), clients, cfg.extra_config, np.array(all_train_data), np.array(all_test_data))
     hyper.run()
-    df = pd.DataFrame()
-    for i in range(len(hyper.test_evals)):
-        iter, loss, accuracy = hyper.test_evals[i]
-        df = df.append({
-            'name': f"{name}-{version}",
-            'version': version,
-            'N': N,
-#            'batches': batches,
-#            'iterations': iterations,
-            'current_iteration': iter,
-            'loss': loss,
-            'accuracy': accuracy,
-        }, ignore_index=True)
-
-    print(f"Writing: {len(df)} records to {name}")
-    storage.append(data_dir, name + ".csv", df)
-
-    df = pd.DataFrame()
-    for i in range(len(hyper.train_evals)):
-        iter, loss, accuracy = hyper.train_evals[i]
-        df = df.append({
-            'name': f"{name}-{version}",
-            'version': version,
-            'N': N,
-            #            'batches': batches,
-            #            'iterations': iterations,
-            'current_iteration': iter,
-            'loss': loss,
-            'accuracy': accuracy,
-        }, ignore_index=True)
-
-    print(f"Writing: {len(df)} records to {name}-train")
-    storage.append(data_dir, name + "-train.csv", df)
-
-    df = pd.DataFrame()
-    for i in range(len(hyper.test_model_stats)):
-        iter, losses, accuracies = hyper.test_model_stats[i]
-        di = {
-            'name': f"{name}-{version}",
-            'version': version,
-            'N': N,
-            'current_iteration': iter,
-        }
-        for j in range(len(accuracies)):
-            di[f"{name}-accuracy-{j}"] = accuracies[j]
-            di[f"{name}-loss-{j}"] = losses[j]
-        df = df.append(di, ignore_index=True)
-    storage.append(data_dir, f"{name}-{version}-models.csv", df)
 
 
 def run(nn5_file_path: str, cfg: Config, version: int):

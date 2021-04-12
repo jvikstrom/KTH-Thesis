@@ -34,6 +34,7 @@ class Trainer:
         self.eval_train_gap = trainer_input.eval_train_gap
         self.max_iter = cfg.iterations
         self.disable_tqdm = trainer_input.disable_tqdm
+        print(f"Running with disabled tqdm {self.disable_tqdm}")
 
         self.clients = clients
         self.all_test_data = all_test_data
@@ -66,7 +67,7 @@ class Trainer:
             losses.append(loss)
             accuracies.append(accuracy)
         else:
-            for client in tqdm(self.clients, desc="eval"):
+            for client in tqdm(self.clients, desc="eval", disable=self.disable_tqdm):
                 """
                 Convert numpy array to tf.tensor: input_tensor = tf.convert_to_tensor(input_ndarray)
                 Use the tensor directly as an argument to the model. output_tensor = model(input_tensor)
@@ -128,8 +129,8 @@ class Trainer:
                     'loss': loss,
                     'accuracy': accuracy,
                 }, ignore_index=True)
-
-        print(f"Writing: {len(df)} records to {self.name}")
+        if len(df) > 0:
+            print(f"Writing: {len(df)} records to {self.name}")
         storage.append(self.data_dir, self.name + ".csv", df)
 
         df = pd.DataFrame()
@@ -147,7 +148,8 @@ class Trainer:
                     'accuracy': accuracy,
                 }, ignore_index=True)
 
-        print(f"Writing: {len(df)} records to {self.name}-train")
+        if len(df) > 0:
+            print(f"Writing: {len(df)} records to {self.name}")
         storage.append(self.data_dir, self.name + "-train.csv", df)
 
         df = pd.DataFrame()
@@ -164,6 +166,9 @@ class Trainer:
                     di[f"{self.name}-accuracy-{j}"] = accuracies[j]
                     di[f"{self.name}-loss-{j}"] = losses[j]
                 df = df.append(di, ignore_index=True)
+        if len(df) > 0:
+            print(f"Writing: {len(df)} records to {self.name}-{self.version}-models.csv")
+
         storage.append(self.data_dir, f"{self.name}-{self.version}-models.csv", df)
         self.last_write = epoch
         self.test_model_stats = list(filter(lambda iter: iter[0] < self.last_write, self.test_model_stats))

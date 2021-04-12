@@ -22,7 +22,7 @@ class Config(BaseModel):
     extra_config: Any
     strategy: Any
     optimizer: Callable
-    disable_tqdm: bool = False
+    disable_tqdm: bool
 
 
 def none_gossip_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
@@ -43,6 +43,7 @@ def none_gossip_config(n: int, data_dir: str, learning_rate: float, batches: flo
         ),
         strategy=Gossip,
         optimizer=tf.optimizers.SGD,
+        disable_tqdm=False,
     )
 
 
@@ -64,6 +65,7 @@ def exchange_cycle_config(n: int, data_dir: str, learning_rate: float, batches: 
         ),
         strategy=ExchangeGossip,
         optimizer=tf.optimizers.SGD,
+        disable_tqdm=False,
     )
 
 
@@ -93,6 +95,7 @@ def exchange_config(n: int, data_dir: str, learning_rate: float, batches: float,
         ),
         strategy=ExchangeGossip,
         optimizer=tf.optimizers.SGD,
+        disable_tqdm=False,
     )
 
 
@@ -110,6 +113,7 @@ def aggregate_hypercube_config(n: int, data_dir: str, learning_rate: float, batc
         ),
         strategy=Hypercube,
         optimizer=tf.optimizers.SGD,
+        disable_tqdm=False,
     )
 
 
@@ -127,6 +131,7 @@ def fls_config(n: int, data_dir: str, learning_rate: float, batches: float, iter
         ),
         strategy=FLS,
         optimizer=tf.optimizers.SGD,
+        disable_tqdm=False,
     )
 
 
@@ -142,6 +147,7 @@ def centralized_config(n: int, data_dir: str, learning_rate: float, batches: flo
         ),
         strategy=Centralized,
         optimizer=tf.optimizers.SGD,
+        disable_tqdm=False,
     )
 
 

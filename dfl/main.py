@@ -19,7 +19,6 @@ for gpu in tf.config.list_physical_devices('GPU'):
 failure_schedule_path = os.getenv("FAIL_PATH")
 
 disable_tqdm = os.getenv("DISABLE_TQDM")
-
 app = typer.Typer()
 
 
@@ -60,6 +59,7 @@ def nn5(strategy: str, n: int, runs: int, batches: Optional[int] = typer.Argumen
     if nn5_path is None:
         raise AssertionError("Must specify the 'NN5_PATH' env variable to the nn5 data csv.")
     cfg = load_config(strategy, n, data_dir, learning_rate, batches, iterations)
+    cfg.disable_tqdm = disable_tqdm is not None
     for i in range(runs):
         run_nn5(nn5_path, cfg, i)
 
