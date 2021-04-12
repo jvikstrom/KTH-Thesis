@@ -15,7 +15,7 @@ import gc
 from tqdm import tqdm
 from pydantic import BaseModel
 from typing import Any, Callable
-from train import TrainerConfig
+from train import TrainerConfig, TrainerInput
 from configs import Config, none_gossip_config, exchange_cycle_config, exchange_config, aggregate_hypercube_config, fls_config, centralized_config
 
 
@@ -77,7 +77,13 @@ def run_nn5(nn5_file_path: str, data_dir: str, name: str, N, strategy, cfg: Conf
         model_fn_factory(learning_rate, cfg.optimizer)
     ) for i in range(N)]
 
-    hyper = strategy(clients, cfg.extra_config, np.array(all_train_data), np.array(all_test_data))
+    hyper = strategy(TrainerInput(
+            name=name,
+            version=version,
+            data_dir=data_dir,
+            eval_test_gap=10,
+            eval_train_gap=50,
+            disable_tqdm=cfg.disable_tqdm), clients, cfg.extra_config, np.array(all_train_data), np.array(all_test_data))
     hyper.run()
     df = pd.DataFrame()
     for i in range(len(hyper.test_evals)):

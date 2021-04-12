@@ -15,7 +15,7 @@ import gc
 from tqdm import tqdm
 from pydantic import BaseModel
 from typing import Any, Callable
-from train import TrainerConfig
+from train import TrainerConfig, TrainerInput
 from configs import Config, none_gossip_config, exchange_cycle_config, exchange_config, aggregate_hypercube_config, fls_config, centralized_config
 
 
@@ -61,7 +61,7 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
     train, test = tff.simulation.datasets.emnist.load_data(only_digits=False)
     print("Loading data into memory.")
     all_train_data, all_test_data = [], []
-    for i in tqdm(range(int(len(train.client_ids) * data_fac)), desc="Loading data"):
+    for i in tqdm(range(int(len(train.client_ids) * data_fac)), desc="Loading data", disable=cfg.disable_tqdm):
         all_train_data.append(load_from_emnist(train, i))
         all_test_data.append(load_from_emnist(test, i))
 
@@ -72,57 +72,16 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
         model_fn_factory(learning_rate, cfg.optimizer)
     ) for i in range(N)]
 
-    hyper = strategy(clients, cfg.extra_config, all_train_data, all_test_data, failure_schedule=failure_schedule)
+    hyper = strategy(TrainerInput(
+        name=name,
+        version=version,
+        data_dir=data_dir,
+        eval_test_gap=10,
+        eval_train_gap=50,
+        disable_tqdm=cfg.disable_tqdm),
+        clients, cfg.extra_config, all_train_data, all_test_data, failure_schedule=failure_schedule)
     print(f"Start running {name}...")
     hyper.run()
-    df = pd.DataFrame()
-    for i in range(len(hyper.test_evals)):
-        iter, loss, accuracy = hyper.test_evals[i]
-        df = df.append({
-            'name': f"{name}-{version}",
-            'version': version,
-            'N': N,
-#            'batches': batches,
-#            'iterations': iterations,
-            'current_iteration': iter,
-            'loss': loss,
-            'accuracy': accuracy,
-        }, ignore_index=True)
-
-    print(f"Writing: {len(df)} records to {name}")
-    storage.append(data_dir, name + ".csv", df)
-
-    df = pd.DataFrame()
-    for i in range(len(hyper.train_evals)):
-        iter, loss, accuracy = hyper.train_evals[i]
-        df = df.append({
-            'name': f"{name}-{version}",
-            'version': version,
-            'N': N,
-            #            'batches': batches,
-            #            'iterations': iterations,
-            'current_iteration': iter,
-            'loss': loss,
-            'accuracy': accuracy,
-        }, ignore_index=True)
-
-    print(f"Writing: {len(df)} records to {name}-train")
-    storage.append(data_dir, name + "-train.csv", df)
-
-    df = pd.DataFrame()
-    for i in range(len(hyper.test_model_stats)):
-        iter, losses, accuracies = hyper.test_model_stats[i]
-        di = {
-            'name': f"{name}-{version}",
-            'version': version,
-            'N': N,
-            'current_iteration': iter,
-        }
-        for j in range(len(accuracies)):
-            di[f"{name}-accuracy-{j}"] = accuracies[j]
-            di[f"{name}-loss-{j}"] = losses[j]
-        df = df.append(di, ignore_index=True)
-    storage.append(data_dir, f"{name}-{version}-models.csv", df)
 
 
 def run(cfg: Config, version: int, failure_schedule=None):

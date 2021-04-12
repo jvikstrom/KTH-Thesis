@@ -51,8 +51,8 @@ class GossipConfig(BaseModel):
 
 
 class Gossip(Trainer):
-    def __init__(self, clients: List[Client], cfg: GossipConfig, all_train, all_test, failure_schedule=None):
-        Trainer.__init__(self, clients, cfg.base_config.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
+    def __init__(self, trainer_input, clients: List[Client], cfg: GossipConfig, all_train, all_test, failure_schedule=None):
+        Trainer.__init__(self, trainer_input, clients, cfg.base_config.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
         self.versions = [1 for _ in range(len(clients))]
         self.guider = cfg.base_config.guider(clients)
         self.recv_model = recv_model
@@ -63,7 +63,7 @@ class Gossip(Trainer):
             Trainer.step_and_eval(self, i)
 
             old_weights = [client.model.get_weights() for client in self.clients]
-            for client_idx in tqdm(range(len(self.clients))):
+            for client_idx in tqdm(range(len(self.clients)), disable=self.disable_tqdm):
                 nxt = self.guider.next(client_idx)
                 send_weights = old_weights[client_idx]
                 # Does the preprocessing for averaging.
@@ -90,8 +90,8 @@ class ExchangeConfig(BaseModel):
 
 
 class ExchangeGossip(Trainer):
-    def __init__(self, clients: List[Client], cfg: ExchangeConfig, all_train, all_test, failure_schedule=None):
-        Trainer.__init__(self, clients, cfg.base_config.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
+    def __init__(self, trainer_input, clients: List[Client], cfg: ExchangeConfig, all_train, all_test, failure_schedule=None):
+        Trainer.__init__(self, trainer_input, clients, cfg.base_config.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
         self.guider = cfg.base_config.guider(clients)
         self.recv_model = exchange_recv_model
         self.config = cfg
@@ -129,7 +129,7 @@ class ExchangeGossip(Trainer):
 #                self.clients[p1].model.optimizer.set_weights([weight.copy() for weight in old_models[p2].optimizer.get_weights()])
 #                self.clients[p2].model.optimizer.set_weights([weight.copy() for weight in old_models[p1].optimizer.get_weights()])
 
-            for client in tqdm(self.clients):
+            for client in tqdm(self.clients, disable=self.disable_tqdm):
                 client.train(self.trainer_config.batches)
 
         Trainer.step_and_eval(self, self.trainer_config.iterations)

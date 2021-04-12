@@ -34,8 +34,8 @@ class HypercubeConfig(BaseModel):
 
 
 class Hypercube(Trainer):
-    def __init__(self, clients: List[Client], cfg: HypercubeConfig, all_train, all_test, failure_schedule=None):
-        Trainer.__init__(self, clients, cfg.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
+    def __init__(self, trainer_input, clients: List[Client], cfg: HypercubeConfig, all_train, all_test, failure_schedule=None):
+        Trainer.__init__(self, trainer_input, clients, cfg.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
         for client in self.clients:
             client.model.set_weights([weight.copy() for weight in clients[0].model.get_weights()])
         self.rounds = preprocess_client_targets(clients)
@@ -43,7 +43,7 @@ class Hypercube(Trainer):
     def run(self):
         for i in range(self.trainer_config.iterations):
             Trainer.step_and_eval(self, i)
-            for client in tqdm(self.clients, desc="train"):
+            for client in tqdm(self.clients, desc="train", disable=self.disable_tqdm):
                 client.train(batches=self.trainer_config.batches)
 
             aggregated_weights = [np.zeros_like(weight) for weight in self.clients[0].model.get_weights()]

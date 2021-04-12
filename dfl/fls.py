@@ -2,14 +2,15 @@ from train import Trainer, TrainerConfig
 from pydantic import BaseModel
 from tqdm import tqdm
 
+
 class FLSConfig(BaseModel):
     trainer_config: TrainerConfig
     # TODO: Might want to include a server learning rate here.
 
 
 class FLS(Trainer):
-    def __init__(self, clients, cfg: FLSConfig, all_train, all_test, failure_schedule=None):
-        Trainer.__init__(self, clients, cfg.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
+    def __init__(self, trainer_input, clients, cfg: FLSConfig, all_train, all_test, failure_schedule=None):
+        Trainer.__init__(self, trainer_input, clients, cfg.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
         for client in self.clients:
             client.model.set_weights([weight.copy() for weight in self.clients[0].model.get_weights()])
 

@@ -22,6 +22,7 @@ class Config(BaseModel):
     extra_config: Any
     strategy: Any
     optimizer: Callable
+    disable_tqdm: bool = False
 
 
 def none_gossip_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
