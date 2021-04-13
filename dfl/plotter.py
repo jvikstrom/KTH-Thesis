@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sb
 import numpy as np
 import argparse
+import re
 # KDEplot: https://seaborn.pydata.org/generated/seaborn.kdeplot.html
 
 parser = argparse.ArgumentParser(description="Plot the data")
@@ -12,7 +13,7 @@ parser.add_argument("--models", dest="models", action="store_const", const=True,
 parser.add_argument("--iter", dest="iter", help="What iter to print model accuracies at")
 parser.add_argument("--max-iter", dest="max_iter")
 parser.add_argument("--title", dest="title", default="")
-
+parser.add_argument("--filter", dest="filter", default=None)
 args = parser.parse_args()
 
 sb.set_style('whitegrid')
@@ -29,6 +30,31 @@ files = os.listdir(directory)
 types = list(map(lambda x: x[:-4], files))
 
 print('read: ', [name for name in filter(lambda x: "-train" not in x and "-models" not in x, types)])
+
+
+def plot_stdouts():
+    base = "data/stdouts"
+    files = ["agg-hypercube.stdout", "exchange-cycle.stdout", "exchange-no-fail.stdout", "exchange.stdout", "none-gossip.stdout"]
+    plt.figure(figsize=(10, 10))
+    plt.xlabel("Epochs")
+    plt.ylabel("Accuracy")
+    for file in files:
+        path = f"{base}/{file}"
+        with open(path, "r") as f:
+            xs = []
+            ys = []
+            lines = f.readlines()
+            for line in lines:
+                m = re.search(r"TEST (\d+) .+ accuracy: (\d+\.\d+)", line)
+                if m is None:
+                    continue
+                iter = m.group(1)
+                accuracy = m.group(2)
+                xs.append(int(iter))
+                ys.append(float(accuracy))
+#                print(f"Accuracy: {accuracy}")
+            sb.lineplot(y=ys, x=xs, label=file)
+
 
 
 def plot_accuracy():
@@ -89,6 +115,10 @@ def plot_models():
     plt.xlabel("Accuracy")
 
     for name, df in zip(names, dfs):
+        if args.filter is not None:
+            if name.find(args.filter) == -1:
+                print(f"{name} does not pass filter {args.filter}, skipping...")
+                continue
         acs = df[df.current_iteration == int(at_iter)].filter(regex='loss').to_numpy()[0]
         accuracies[name] = acs
         xs[name] = list(range(len(acs)))
