@@ -56,8 +56,8 @@ def model_fn_factory(learning_rate, optimizer):
         model = tf.keras.Model(encoder_inputs, decoder_outputs)
 
         model.compile(optimizer=optimizer(learning_rate),
-                      loss=smape, #tf.keras.losses.MeanAbsoluteError(),
-                      metrics=[smape])#[tf.keras.metrics.MeanAbsolutePercentageError()])
+                      loss=smape,
+                      metrics=[smape])
         return model
 
     return fn
@@ -82,7 +82,7 @@ def run_nn5(nn5_file_path: str, data_dir: str, name: str, N, strategy, cfg: Conf
             version=version,
             data_dir=data_dir,
             eval_test_gap=10,
-            eval_train_gap=50,
+            eval_train_gap=10,
             disable_tqdm=cfg.disable_tqdm), clients, cfg.extra_config, np.array(all_train_data), np.array(all_test_data))
     hyper.run()
 

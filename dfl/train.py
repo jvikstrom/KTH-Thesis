@@ -9,7 +9,7 @@ from storage import append
 import pandas as pd
 import storage
 from datetime import datetime
-
+import random
 
 class TrainerConfig(BaseModel):
     batches: int
@@ -88,7 +88,15 @@ class Trainer:
         self.test_evals.append((epoch, np.mean(losses), np.mean(accuracies)))
 
     def eval_train(self, epoch, model=None):
-        losses, accuracies = self.__eval_data("TRAIN", epoch, self.train_concated, model=model)
+        # Pick 10 random batches
+        train_input = []
+        train_labels = []
+        train_loss_batches = 20
+        for i in range(train_loss_batches):
+            idx = int(random.uniform(0, len(self.train_concated[0])))
+            train_input.append(self.train_concated[0][idx])
+            train_labels.append(self.train_concated[1][idx])
+        losses, accuracies = self.__eval_data("TRAIN", epoch, (np.array(train_input), np.array(train_labels)), model=model)
         loss, accuracy = np.mean(losses), np.mean(accuracies)
         self.train_evals.append((epoch, loss, accuracy))
         return loss, accuracy
