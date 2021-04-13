@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from storage import append
 import pandas as pd
 import storage
+from datetime import datetime
 
 
 class TrainerConfig(BaseModel):
@@ -76,7 +77,9 @@ class Trainer:
                 loss, accuracy = client.model.evaluate(*data, verbose=0, batch_size=32)
                 losses.append(loss)
                 accuracies.append(accuracy)
-        print(f"{data_set} {epoch} ::: loss: {np.mean(losses)}   ----   accuracy: {np.mean(accuracies)}")
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        print(f"{data_set} {epoch} ::: loss: {np.mean(losses)}   ----   accuracy: {np.mean(accuracies)} at time {current_time}")
         return losses, accuracies
 
     def eval_test(self, epoch, model=None):
