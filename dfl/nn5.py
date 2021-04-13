@@ -20,7 +20,7 @@ from configs import Config, none_gossip_config, exchange_cycle_config, exchange_
 
 
 def smape(y_p, y_t):
-    return 2 * tf.reduce_mean((tf.abs(y_p - y_t) / (tf.abs(y_t) + tf.abs(y_p)))) * 100.0
+    return 2 * tf.reduce_mean((tf.abs(y_p - y_t) / (1e-8 + tf.abs(y_t) + tf.abs(y_p)))) * 100.0
 
 
 def model_fn_factory(learning_rate, optimizer):
