@@ -28,14 +28,30 @@ def model_fn_factory(learning_rate, optimizer):
         num_encoder_tokens = 1
         num_decoder_tokens = 1
         latent_dim = 256
-
-#        model = tf.keras.models.Sequential([
-#            tf.keras.layers.Dense(128, activation='relu'),
-#            tf.keras.layers.Dense(56),
-#        ])
+        # random_normal
+        # random_uniform
+        # truncated_normal
+        # zeros
+        # ones
+        # glorot_normal
+        # glorot_uniform
+        # identity
+        # orthogonal
+        # constant
+        # variance_scaling
+        #ki = 'glorot_uniform'
+        ki = tf.keras.initializers.RandomUniform(minval=0.1, maxval=0.2)
+        ri = 'orthogonal'
+        bi = 'zeros'
+#        kid = 'glorot_uniform'
+        kid = tf.keras.initializers.RandomUniform(minval=0.1, maxval=0.2)
+        bid = 'zeros'
 
         encoder_inputs = tf.keras.layers.Input(shape=(None, num_encoder_tokens))
-        encoder = tf.keras.layers.LSTM(latent_dim, return_state=True)
+        encoder = tf.keras.layers.LSTM(latent_dim, return_state=True, activation='tanh',
+                                       kernel_initializer=ki,
+                                       recurrent_initializer=ri,
+                                       bias_initializer=bi)
         encoder_outputs, state_h, state_c = encoder(encoder_inputs)
         # We discard `encoder_outputs` and only keep the states.
         encoder_states = [state_h, state_c]
@@ -45,10 +61,15 @@ def model_fn_factory(learning_rate, optimizer):
         # We set up our decoder to return full output sequences,
         # and to return internal states as well. We don't use the
         # return states in the training model, but we will use them in inference.
-        decoder_lstm = tf.keras.layers.LSTM(latent_dim, return_sequences=True, return_state=True)
+        decoder_lstm = tf.keras.layers.LSTM(latent_dim, return_sequences=True, return_state=True, activation='tanh',
+                                            kernel_initializer=ki,
+                                            recurrent_initializer=ri,
+                                            bias_initializer=bi)
         decoder_outputs, _, _ = decoder_lstm(encoder_inputs,
                                              initial_state=encoder_states)
-        decoder_dense = tf.keras.layers.Dense(num_decoder_tokens, activation='relu')
+        decoder_dense = tf.keras.layers.Dense(num_decoder_tokens, activation='relu',
+                                              kernel_initializer=kid,
+                                              bias_initializer=bid)
         decoder_outputs = decoder_dense(decoder_outputs)
 
         # Define the model that will turn
@@ -56,7 +77,7 @@ def model_fn_factory(learning_rate, optimizer):
         model = tf.keras.Model(encoder_inputs, decoder_outputs)
 
         model.compile(optimizer=optimizer(learning_rate),
-                      loss=smape,
+                      loss=smape,#tf.keras.losses.MeanAbsoluteError(),#smape,
                       metrics=[smape])
         return model
 

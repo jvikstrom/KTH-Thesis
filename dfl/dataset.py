@@ -5,8 +5,10 @@ import tensorflow as tf
 class NN5Source:
     def __init__(self, file_path: str):
         raw_data = []
+#        repls = [0 for i in range(111)]
         with open(file_path) as f:
             lines = f.readlines()
+#            repl = 0
             for line in lines:
                 values = [v for v in line.split(',')]
                 for i in range(len(values)):
@@ -14,10 +16,16 @@ class NN5Source:
                         values[i] = float(values[i])
                     except ValueError:
                         values[i] = 0.0
+#                        repls[i] += 1
                         continue
                 if len(values) < 10:
                     continue
                 raw_data.append(values)
+#                repls.append(repl)
+
+#        nzeros = [len(list(filter(lambda x: x < 0.001, td))) for td in raw_data]
+        #print("Number zeros:", nzeros)
+        #print("Number replcements: ", repls)
 
         # Normalize the data. Didn't really work that well...
 #        mean = np.mean(raw_data)
