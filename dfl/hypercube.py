@@ -5,6 +5,7 @@ from client import Client, Guider
 from train import Trainer, TrainerConfig
 from pydantic import BaseModel
 
+
 def preprocess_client_targets(clients: List[Client]):
     n_rounds = np.log2(len(clients))
     rounds = []
@@ -34,8 +35,8 @@ class HypercubeConfig(BaseModel):
 
 
 class Hypercube(Trainer):
-    def __init__(self, trainer_input, clients: List[Client], cfg: HypercubeConfig, all_train, all_test, failure_schedule=None):
-        Trainer.__init__(self, trainer_input, clients, cfg.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
+    def __init__(self, trainer_input, clients: List[Client], cfg: HypercubeConfig, all_train, all_test):
+        Trainer.__init__(self, trainer_input, clients, cfg.trainer_config, all_train, all_test)
         for client in self.clients:
             client.model.set_weights([weight.copy() for weight in clients[0].model.get_weights()])
         self.rounds = preprocess_client_targets(clients)
@@ -62,12 +63,12 @@ class Hypercube(Trainer):
 class HamiltonCycleGuider(Guider):
     def __init__(self, clients: List[Client]):
         Guider.__init__(self, clients)
-        self.round = [0 for _ in self.clients]
+        self.round = [0 for _ in self.all_clients]
 
-    def next(self, client_idx: int) -> int:
+    def next(self, clients, client_idx: int) -> int:
         if self.round[client_idx] % 2 == client_idx % 2:
             add = 1
         else:
             add = -1
         self.round[client_idx] += 1
-        return (client_idx + add) % len(self.clients)
+        return (client_idx + add) % len(clients)

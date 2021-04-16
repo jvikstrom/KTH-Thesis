@@ -16,7 +16,7 @@ if data_dir is None:
 for gpu in tf.config.list_physical_devices('GPU'):
     tf.config.experimental.set_memory_growth(gpu, True)
 
-failure_schedule_path = os.getenv("FAIL_PATH")
+alive_segment_path = os.getenv("ALIVE_SEG_PATH")
 
 disable_tqdm = os.getenv("DISABLE_TQDM")
 app = typer.Typer()
@@ -44,12 +44,14 @@ def emnist(strategy: str, n: int, runs: int, batches: Optional[int] = typer.Argu
            iterations: Optional[int] = typer.Argument(100), learning_rate: Optional[float] = typer.Argument(0.001)):
     cfg = load_config(strategy, n, data_dir, learning_rate, batches, iterations)
     cfg.disable_tqdm = disable_tqdm is not None
-    fail_schd = None
-    if failure_schedule_path is not None:
-        with open(failure_schedule_path, 'r') as f:
-            fail_schd = json.loads(f.read())
+    if alive_segment_path is not None:
+        print("Loading churn schedule...")
+        with open(alive_segment_path, 'r') as f:
+            alive_segments = json.loads(f.read())['segments']
+    else:
+        alive_segments = [[(0, iterations)] for _ in range(n)]
     for i in range(runs):
-        run_emnist(cfg, i, failure_schedule=fail_schd)
+        run_emnist(cfg, i, alive_segments)
 
 
 @app.command()

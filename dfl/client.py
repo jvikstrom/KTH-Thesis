@@ -3,14 +3,7 @@ from typing import List
 import numpy as np
 import random
 
-"""
-404dc75f4db1        johan/all-ml                               "python3 dfl/main.py…"   36 minutes ago      Exited (1) 33 minutes ago                                        centralized
-bdd05722cbe0        johan/all-ml                               "python3 dfl/main.py…"   46 minutes ago      Exited (1) 24 minutes ago                                        agg-hypercube
-b2529865e9a0        johan/all-ml                               "python3 dfl/main.py…"   47 minutes ago      Exited (1) 24 minutes ago                                        none-gossip
-0094eea64f70        johan/all-ml                               "python3 dfl/main.py…"   56 minutes ago      Exited (1) 32 minutes ago                                        exchange
-1c2f2e481912        johan/all-ml                               "python3 dfl/main.py…"   56 minutes ago      Exited (1) 32 minutes ago                                        exchange-cycle
 
-"""
 class Client:
     def __init__(self, train_data, test_data, model_fn):
         """
@@ -63,9 +56,12 @@ class Client:
 
 class Guider:
     def __init__(self, clients: List[Client]):
-        self.clients = clients
+        self.all_clients = clients
 
-    def next(self, client_idx: int) -> int:
+    def next(self, clients: List[Client], client_idx: int) -> int:
+        self.clients = clients
+        if len(self.clients) <= 1:
+            return -1
         while True:
             nxt = np.random.randint(0, len(self.clients))
             if nxt != client_idx:

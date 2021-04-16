@@ -51,8 +51,8 @@ class GossipConfig(BaseModel):
 
 
 class Gossip(Trainer):
-    def __init__(self, trainer_input, clients: List[Client], cfg: GossipConfig, all_train, all_test, failure_schedule=None):
-        Trainer.__init__(self, trainer_input, clients, cfg.base_config.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
+    def __init__(self, trainer_input, clients: List[Client], cfg: GossipConfig, all_train, all_test):
+        Trainer.__init__(self, trainer_input, clients, cfg.base_config.trainer_config, all_train, all_test)
         self.versions = [1 for _ in range(len(clients))]
         self.guider = cfg.base_config.guider(clients)
         self.recv_model = recv_model
@@ -64,7 +64,9 @@ class Gossip(Trainer):
 
             old_weights = [client.model.get_weights() for client in self.clients]
             for client_idx in tqdm(range(len(self.clients)), disable=self.disable_tqdm):
-                nxt = self.guider.next(client_idx)
+                nxt = self.guider.next(self.clients, client_idx)
+                if nxt == -1:
+                    continue
                 send_weights = old_weights[client_idx]
                 # Does the preprocessing for averaging.
                 both_weights = zip(send_weights, old_weights[nxt])
@@ -90,8 +92,8 @@ class ExchangeConfig(BaseModel):
 
 
 class ExchangeGossip(Trainer):
-    def __init__(self, trainer_input, clients: List[Client], cfg: ExchangeConfig, all_train, all_test, failure_schedule=None):
-        Trainer.__init__(self, trainer_input, clients, cfg.base_config.trainer_config, all_train, all_test, failure_schedule=failure_schedule)
+    def __init__(self, trainer_input, clients: List[Client], cfg: ExchangeConfig, all_train, all_test):
+        Trainer.__init__(self, trainer_input, clients, cfg.base_config.trainer_config, all_train, all_test)
         self.guider = cfg.base_config.guider(clients)
         self.recv_model = exchange_recv_model
         self.config = cfg
@@ -101,12 +103,15 @@ class ExchangeGossip(Trainer):
             Trainer.step_and_eval(self, i)
             exchanged = []
             for client_idx in range(len(self.clients)):
-                nxt = self.guider.next(client_idx)
+                nxt = self.guider.next(self.clients, client_idx)
+                if nxt == -1:
+                    continue
                 exchange_pair = (client_idx, nxt)
                 if client_idx > nxt:
                     exchange_pair = (nxt, client_idx)
                 if exchange_pair not in exchanged:
                     exchanged.append(exchange_pair)
+            print(f"Exchanged: {exchanged}")
             # Do the actual exchanges.
             model_weights = [client.model.get_weights() for client in self.clients]
             optimizer_weights = [client.model.optimizer.get_weights() for client in self.clients]

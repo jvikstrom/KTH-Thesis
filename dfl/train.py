@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Callable
+from typing import List, Callable, Optional, Tuple
 from tqdm import tqdm
 from client import Client
 from dataset import concat_data
@@ -23,11 +23,12 @@ class TrainerInput(BaseModel):
     eval_test_gap: int
     eval_train_gap: int
     disable_tqdm: bool
+    alive_segments: Optional[List[List[Tuple[int, int]]]]
 
 
 class Trainer:
     def __init__(self, trainer_input: TrainerInput, clients: List[Client], cfg: TrainerConfig,
-                 all_train_data, all_test_data, failure_schedule=None):
+                 all_train_data, all_test_data):
         self.name = trainer_input.name
         self.version = trainer_input.version
         self.data_dir = trainer_input.data_dir
@@ -38,6 +39,7 @@ class Trainer:
         print(f"Running with disabled tqdm {self.disable_tqdm}")
 
         self.clients = clients
+        self.all_clients = clients
         self.all_test_data = all_test_data
         self.all_train_data = all_train_data
         self.test_concated = concat_data(all_test_data)
@@ -50,15 +52,10 @@ class Trainer:
         self.trainer_config = cfg
         print(
             f"{len(self.train_concated[0])} number of train samples, {len(self.test_concated[0])} number of test samples")
-        if failure_schedule is not None:
-            self._fail_per_iter = failure_schedule['fails']
-            self._alive_per_iter = failure_schedule['alive']
-            self._join_per_iter = failure_schedule['join']
-        else:
-            self._fail_per_iter = []
-            self._alive_per_iter = []
-            self._join_per_iter = []
-        self.currently_alive = list(range(len(clients)))
+        # Default is that everyone is always alive.
+        self._alive_segments = [[(0, cfg.iterations)] for _ in range(len(self.clients))]
+        if trainer_input.alive_segments is not None:
+            self._alive_segments = trainer_input.alive_segments
         self.last_write = -1
 
     def __eval_data(self, data_set, epoch, data, model=None):
@@ -109,13 +106,28 @@ class Trainer:
         gc.collect()
         self._write_incremental(epoch)
         # Recalculate what's alive.
-        if epoch >= len(self._fail_per_iter) - 1:
-            return
-        for die_idx, new_client_idx, join_by in zip(self._fail_per_iter[epoch], self._alive_per_iter[epoch],
-                                                    self._join_per_iter[epoch]):
-            self.clients[die_idx].set_data(self.all_train_data[new_client_idx], self.all_test_data[new_client_idx])
-            self.clients[die_idx].model.set_weights(
-                [weights.copy() for weights in self.clients[join_by].model.get_weights()])
+        # We only look at the top of each client and remove that segment if it's done.
+        for i in range(len(self.all_clients)):
+            while True:
+                if len(self._alive_segments[i]) == 0:
+                    break
+                start, end = self._alive_segments[i][0]
+                if epoch > end:
+                    # Remove the top segment.
+                    self._alive_segments[i].pop(0)
+                else:
+                    # Didn't need to pop anything.
+                    break
+
+        self.clients = []
+        for i in range((len(self.all_clients))):
+            if len(self._alive_segments[i]) == 0:
+                continue
+            start, end = self._alive_segments[i][0]
+            if start <= epoch < end:
+                #print(f"Client {i} currently alive")
+                self.clients.append(self.all_clients[i])
+        print(f"Total {len(self.clients)} are currently alive")
 
     def step_and_eval(self, epoch, model=None):
         # Eval every iteration the last 100 iterations

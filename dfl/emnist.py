@@ -51,17 +51,14 @@ def model_fn_factory(learning_rate, optimizer):
 # Exchange cycle adam weights 4 at 100: (train, test): (0.671, 0.599)
 
 
-def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate, version=1, failure_schedule=None):
-    data_fac = os.getenv("PERC_DATA")
-    if data_fac is not None:
-        data_fac = float(data_fac)
-    if data_fac is None:
-        data_fac = 0.1
+def run_emnist(data_dir: str, name: str, strategy, cfg: Config, learning_rate, alive_segments, version=1):
+    if alive_segments is None:
+        raise AssertionError("Something went horribly wrong.")
     # Load simulation data.
     train, test = tff.simulation.datasets.emnist.load_data(only_digits=False)
-    print("Loading data into memory.")
+    print(f"Loading data for {len(alive_segments)} nodes into memory.")
     all_train_data, all_test_data = [], []
-    for i in tqdm(range(int(len(train.client_ids) * data_fac)), desc="Loading data", disable=cfg.disable_tqdm):
+    for i in tqdm(range(len(alive_segments)), desc="Loading data", disable=cfg.disable_tqdm):
         all_train_data.append(load_from_emnist(train, i))
         all_test_data.append(load_from_emnist(test, i))
 
@@ -70,7 +67,7 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
         all_train_data[i],
         all_test_data[i],
         model_fn_factory(learning_rate, cfg.optimizer)
-    ) for i in range(N)]
+    ) for i in range(len(alive_segments))]
 
     hyper = strategy(TrainerInput(
         name=name,
@@ -78,15 +75,16 @@ def run_emnist(data_dir: str, name: str, N, strategy, cfg: Config, learning_rate
         data_dir=data_dir,
         eval_test_gap=10,
         eval_train_gap=50,
-        disable_tqdm=cfg.disable_tqdm),
-        clients, cfg.extra_config, all_train_data, all_test_data, failure_schedule=failure_schedule)
+        disable_tqdm=cfg.disable_tqdm,
+        alive_segments=alive_segments),
+        clients, cfg.extra_config, all_train_data, all_test_data)
     print(f"Start running {name}...")
     hyper.run()
 
 
-def run(cfg: Config, version: int, failure_schedule=None):
-    run_emnist(cfg.data_dir, cfg.name, cfg.N, cfg.strategy, cfg, learning_rate=cfg.learning_rate,
-               version=version, failure_schedule=failure_schedule)
+def run(cfg: Config, version: int, alive_segments):
+    run_emnist(cfg.data_dir, cfg.name, cfg.strategy, cfg, learning_rate=cfg.learning_rate,
+               alive_segments=alive_segments, version=version)
 
 
 if __name__ == "__main__":
