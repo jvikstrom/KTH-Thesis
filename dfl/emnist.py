@@ -76,6 +76,7 @@ def run_emnist(data_dir: str, name: str, strategy, cfg: Config, learning_rate, a
         eval_test_gap=10,
         eval_train_gap=50,
         disable_tqdm=cfg.disable_tqdm,
+        learning_rate=cfg.learning_rate,
         alive_segments=alive_segments),
         clients, cfg.extra_config, all_train_data, all_test_data)
     print(f"Start running {name}...")

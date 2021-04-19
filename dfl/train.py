@@ -23,6 +23,7 @@ class TrainerInput(BaseModel):
     eval_test_gap: int
     eval_train_gap: int
     disable_tqdm: bool
+    learning_rate: float
     alive_segments: Optional[List[List[Tuple[int, int]]]]
 
 
@@ -36,6 +37,7 @@ class Trainer:
         self.eval_train_gap = trainer_input.eval_train_gap
         self.max_iter = cfg.iterations
         self.disable_tqdm = trainer_input.disable_tqdm
+        self.learning_rate = trainer_input.learning_rate
         print(f"Running with disabled tqdm {self.disable_tqdm}")
 
         self.clients = clients
@@ -146,6 +148,7 @@ class Trainer:
                     'name': f"{self.name}-{self.version}",
                     'version': self.version,
                     'N': len(self.clients),
+                    'learning_rate': self.learning_rate,
                     #            'batches': batches,
                     #            'iterations': iterations,
                     'current_iteration': iter,
@@ -164,6 +167,7 @@ class Trainer:
                     'name': f"{self.name}-{self.version}",
                     'version': self.version,
                     'N': len(self.clients),
+                    'learning_rate': self.learning_rate,
                     #            'batches': batches,
                     #            'iterations': iterations,
                     'current_iteration': iter,

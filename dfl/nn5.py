@@ -104,6 +104,7 @@ def run_nn5(nn5_file_path: str, data_dir: str, name: str, N, strategy, cfg: Conf
             data_dir=data_dir,
             eval_test_gap=10,
             eval_train_gap=10,
+            learning_rate=cfg.learning_rate,
             disable_tqdm=cfg.disable_tqdm), clients, cfg.extra_config, np.array(all_train_data), np.array(all_test_data))
     hyper.run()
 
