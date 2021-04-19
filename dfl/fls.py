@@ -11,12 +11,15 @@ class FLSConfig(BaseModel):
 class FLS(Trainer):
     def __init__(self, trainer_input, clients, cfg: FLSConfig, all_train, all_test):
         Trainer.__init__(self, trainer_input, clients, cfg.trainer_config, all_train, all_test)
+        self.model = self.clients[0].model
         for client in self.clients:
-            client.model.set_weights([weight.copy() for weight in self.clients[0].model.get_weights()])
+            client.model.set_weights([weight.copy() for weight in self.model.get_weights()])
 
     def run(self):
         for i in range(self.trainer_config.iterations):
-            Trainer.step_and_eval(self, i, model=self.clients[0].model)
+            Trainer.step_and_eval(self, i, model=self.model)
+            for client in self.clients:
+                client.model.set_weights([weight.copy() for weight in self.model.get_weights()])
             # Does server SGD aggregation with server learning rate = 1.0
             for client in tqdm(self.clients):
                 client.train(self.trainer_config.batches)
@@ -34,5 +37,6 @@ class FLS(Trainer):
 
             for client in self.clients:
                 client.model.set_weights([weight.copy() for weight in aggregated_weights])
+            self.model.set_weights([weight.copy() for weight in aggregated_weights])
 # TODO: Move everything to step_and_eval
         Trainer.step_and_eval(self, self.trainer_config.iterations, model=self.clients[0].model)

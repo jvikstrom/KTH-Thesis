@@ -55,10 +55,10 @@ class Client:
 
 
 class Guider:
-    def __init__(self, clients: List[Client]):
+    def __init__(self, clients):
         self.all_clients = clients
 
-    def next(self, clients: List[Client], client_idx: int) -> int:
+    def next(self, clients, client_idx: int) -> int:
         self.clients = clients
         if len(self.clients) <= 1:
             return -1

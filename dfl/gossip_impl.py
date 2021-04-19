@@ -102,15 +102,24 @@ class ExchangeGossip(Trainer):
         for i in range(self.trainer_config.iterations):
             Trainer.step_and_eval(self, i)
             exchanged = []
-            for client_idx in range(len(self.clients)):
-                nxt = self.guider.next(self.clients, client_idx)
+            clients = [client for client in self.clients]
+            indexes = list(range(len(self.clients)))
+            while len(indexes) > 1:
+                client_idx = indexes[0]
+                nxt = self.guider.next(indexes, 0)
                 if nxt == -1:
                     continue
-                exchange_pair = (client_idx, nxt)
-                if client_idx > nxt:
-                    exchange_pair = (nxt, client_idx)
+                nxt_idx = indexes[nxt]
+                exchange_pair = (client_idx, nxt_idx)
+                if client_idx > nxt_idx:
+                    exchange_pair = (nxt_idx, client_idx)
                 if exchange_pair not in exchanged:
                     exchanged.append(exchange_pair)
+                # Make sure each node only ever exchanges with one other node.
+                print(f"Pop {client_idx} and {nxt}")
+                indexes.remove(client_idx)
+                indexes.remove(nxt_idx)
+
             print(f"Exchanged: {exchanged}")
             # Do the actual exchanges.
             model_weights = [client.model.get_weights() for client in self.clients]

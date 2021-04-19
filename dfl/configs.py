@@ -25,6 +25,28 @@ class Config(BaseModel):
     disable_tqdm: bool
 
 
+def average_gossip_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
+    return Config(
+        N=n,
+        learning_rate=learning_rate,
+        data_dir=data_dir,
+        name="average-gossip",
+        extra_config=GossipConfig(
+            average=True,
+            base_config=BaseGossipConfig(
+                trainer_config=TrainerConfig(
+                    batches=batches,
+                    iterations=iterations,
+                ),
+                guider=Guider,
+            )
+        ),
+        strategy=Gossip,
+        optimizer=tf.optimizers.SGD,
+        disable_tqdm=False,
+    )
+
+
 def none_gossip_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
     return Config(
         N=n,

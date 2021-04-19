@@ -2,7 +2,17 @@ import os
 import typer
 import tensorflow as tf
 from typing import Optional
-from configs import Config, none_gossip_config, exchange_cycle_config, exchange_config, aggregate_hypercube_config, fls_config, centralized_config, exchange_cycle_adam_config, centralized_yogi_config
+from configs import \
+    Config,\
+    none_gossip_config,\
+    exchange_cycle_config,\
+    exchange_config,\
+    aggregate_hypercube_config,\
+    fls_config,\
+    centralized_config,\
+    exchange_cycle_adam_config,\
+    centralized_yogi_config,\
+    average_gossip_config
 from emnist import run as run_emnist
 from shakespeare import run as run_shakespeare
 from cifar import run as run_cifar
@@ -25,6 +35,7 @@ app = typer.Typer()
 def load_config(strategy: str, n: int, data_dir: str, learning_rate: float, batches: int, iterations: int):
     cfgs = {
         "none-gossip": none_gossip_config(n, data_dir, learning_rate, batches, iterations),
+        "average-gossip": average_gossip_config(n, data_dir, learning_rate, batches, iterations),
         "exchange-cycle": exchange_cycle_config(n, data_dir, learning_rate, batches, iterations),
         "exchange-cycle-adam": exchange_cycle_adam_config(n, data_dir, learning_rate, batches, iterations),
         "exchange": exchange_config(n, data_dir, learning_rate, batches, iterations),
