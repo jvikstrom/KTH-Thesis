@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from typing import List, Callable, Optional, Tuple
 from tqdm import tqdm
@@ -10,6 +11,7 @@ import pandas as pd
 import storage
 from datetime import datetime
 import random
+
 
 class TrainerConfig(BaseModel):
     batches: int
@@ -38,6 +40,9 @@ class Trainer:
         self.max_iter = cfg.iterations
         self.disable_tqdm = trainer_input.disable_tqdm
         self.learning_rate = trainer_input.learning_rate
+        self.name_prefix = os.getenv("NAME_PREFIX")
+        if self.name_prefix is None:
+            self.name_prefix = ""
         print(f"Running with disabled tqdm {self.disable_tqdm}")
 
         self.clients = clients
@@ -145,7 +150,7 @@ class Trainer:
             iter, loss, accuracy = self.test_evals[i]
             if iter > self.last_write:
                 df = df.append({
-                    'name': f"{self.name}-{self.version}",
+                    'name': f"{self.name_prefix}{self.name}-{self.version}",
                     'version': self.version,
                     'N': len(self.clients),
                     'learning_rate': self.learning_rate,
@@ -157,14 +162,14 @@ class Trainer:
                 }, ignore_index=True)
         if len(df) > 0:
             print(f"Writing: {len(df)} records to {self.name}")
-        storage.append(self.data_dir, self.name + ".csv", df)
+        storage.append(self.data_dir, self.name_prefix + self.name + ".csv", df)
 
         df = pd.DataFrame()
         for i in range(len(self.train_evals)):
             iter, loss, accuracy = self.train_evals[i]
             if iter > self.last_write:
                 df = df.append({
-                    'name': f"{self.name}-{self.version}",
+                    'name': f"{self.name_prefix}{self.name}-{self.version}",
                     'version': self.version,
                     'N': len(self.clients),
                     'learning_rate': self.learning_rate,
@@ -177,26 +182,26 @@ class Trainer:
 
         if len(df) > 0:
             print(f"Writing: {len(df)} records to {self.name}")
-        storage.append(self.data_dir, self.name + "-train.csv", df)
+        storage.append(self.data_dir, self.name_prefix+self.name + "-train.csv", df)
 
         df = pd.DataFrame()
         for i in range(len(self.test_model_stats)):
             iter, losses, accuracies = self.test_model_stats[i]
             if iter > self.last_write:
                 di = {
-                    'name': f"{self.name}-{self.version}",
+                    'name': f"{self.name_prefix}{self.name}-{self.version}",
                     'version': self.version,
                     'N': len(self.clients),
                     'current_iteration': iter,
                 }
                 for j in range(len(accuracies)):
-                    di[f"{self.name}-accuracy-{j}"] = accuracies[j]
-                    di[f"{self.name}-loss-{j}"] = losses[j]
+                    di[f"{self.name_prefix}{self.name}-accuracy-{j}"] = accuracies[j]
+                    di[f"{self.name_prefix}{self.name}-loss-{j}"] = losses[j]
                 df = df.append(di, ignore_index=True)
         if len(df) > 0:
             print(f"Writing: {len(df)} records to {self.name}-{self.version}-models.csv")
 
-        storage.append(self.data_dir, f"{self.name}-{self.version}-models.csv", df)
+        storage.append(self.data_dir, f"{self.name_prefix}{self.name}-{self.version}-models.csv", df)
         self.last_write = epoch
         self.test_model_stats = list(filter(lambda iter: iter[0] < self.last_write, self.test_model_stats))
         self.test_evals = list(filter(lambda iter: iter[0] < self.last_write, self.test_evals))
