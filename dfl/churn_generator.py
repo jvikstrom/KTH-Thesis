@@ -23,8 +23,10 @@ IPG = IPH * 6
 #GROUP_ALIVE_TIME = [2*IPH,0.5*IPH,0.8*IPH,4*IPH]
 #GROUP_DEAD_TIME = [5*IPH,18*IPH,15*IPH,5*IPH]
 
-GROUP_ALIVE_TIME = [3*IPH,0.1*IPH,0.3*IPH,6*IPH]
-GROUP_DEAD_TIME = [10*IPH,18*IPH,5*IPH,15*IPH]
+#GROUP_ALIVE_TIME = [2.5*IPH,1*IPH,1.5*IPH,2*IPH]
+#GROUP_DEAD_TIME = [7*IPH,3.5*IPH,3.5*IPH,8*IPH]
+GROUP_ALIVE_TIME = [1.1*IPH,IPH,IPH,1.5*IPH]
+GROUP_DEAD_TIME = [5*IPH,4*IPH,4*IPH,6*IPH]
 #GROUP_ALIVE_TIME = [IPH]
 #GROUP_DEAD_TIME = [5*IPH]
 
@@ -34,21 +36,25 @@ ALIVE_PERC = 0.2
 
 
 def main(n: int, iterations: int):
-    cut_away = 1000
+    cut_away = 840
 
     came_alive_at = [0 for _ in range(n)]
     segments = [[] for _ in range(n)]
     alive = np.random.uniform(size=n) < ALIVE_PERC
-    ALIVE_TIME = GROUP_ALIVE_TIME[(iterations // 1) % len(GROUP_ALIVE_TIME)]
-    DEAD_TIME = GROUP_DEAD_TIME[(iterations // 1) % len(GROUP_DEAD_TIME)]
+    e_i = 0
+    ALIVE_TIME = GROUP_ALIVE_TIME[e_i]
+    DEAD_TIME = GROUP_DEAD_TIME[e_i]
     alive_iter = np.random.exponential(DEAD_TIME, size=n)
     die_iter = np.random.poisson(ALIVE_TIME, size=n)
     #print(alive)
     #print(die_iter)
     n_alive_at_iter = []
     for t in range(iterations+cut_away):
-        ALIVE_TIME = GROUP_ALIVE_TIME[(iterations // 1+t) % len(GROUP_ALIVE_TIME)]
-        DEAD_TIME = GROUP_DEAD_TIME[(iterations // 1+t) % len(GROUP_DEAD_TIME)]
+        # Hour of day
+        e_i = (t % (IPG * len(GROUP_ALIVE_TIME))) // (IPG)
+        #print(f"{t} is in spot {e_i}")
+        ALIVE_TIME = GROUP_ALIVE_TIME[e_i] # (iterations // 1+t) % len(GROUP_ALIVE_TIME)]
+        DEAD_TIME = GROUP_DEAD_TIME[e_i] # (iterations // 1+t) % len(GROUP_DEAD_TIME)]
 
         n_alive_at_iter.append(np.sum(alive) / n)
         for i in range(n):
@@ -85,11 +91,11 @@ def main(n: int, iterations: int):
     segs_len = []
     for i in range(n):
         segs_len += [end-start for start, end in segments[i]]
-    plt.hist(segs_len)
-    plt.show()
+#    plt.hist(segs_len)
+#    plt.show()
 
-    plt.hist([len(seg) for seg in segments])
-    plt.show()
+#    plt.hist([len(seg) for seg in segments])
+    #plt.show()
 
     plt.plot(n_alive_at_iter)
     plt.show()
