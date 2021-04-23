@@ -10,9 +10,12 @@ from configs import \
     aggregate_hypercube_config,\
     fls_config,\
     centralized_config,\
-    exchange_cycle_adam_config,\
+    exchange_cycle_adam_config, \
+    exchange_cycle_yogi_config, \
     centralized_yogi_config,\
-    average_gossip_config
+    average_gossip_config,\
+    exchange_adam_config,\
+    exchange_yogi_config
 from emnist import run as run_emnist
 from shakespeare import run as run_shakespeare
 from cifar import run as run_cifar
@@ -38,7 +41,10 @@ def load_config(strategy: str, n: int, data_dir: str, learning_rate: float, batc
         "average-gossip": average_gossip_config(n, data_dir, learning_rate, batches, iterations),
         "exchange-cycle": exchange_cycle_config(n, data_dir, learning_rate, batches, iterations),
         "exchange-cycle-adam": exchange_cycle_adam_config(n, data_dir, learning_rate, batches, iterations),
+        "exchange-cycle-yogi": exchange_cycle_yogi_config(n, data_dir, learning_rate, batches, iterations),
         "exchange": exchange_config(n, data_dir, learning_rate, batches, iterations),
+        "exchange-adam": exchange_adam_config(n, data_dir, learning_rate, batches, iterations),
+        "exchange-yogi": exchange_yogi_config(n, data_dir, learning_rate, batches, iterations),
         "agg-hypercube": aggregate_hypercube_config(n, data_dir, learning_rate, batches, iterations),
         "fls": fls_config(n, data_dir, learning_rate, batches, iterations),
         "centralized": centralized_config(n, data_dir, learning_rate, batches, iterations),

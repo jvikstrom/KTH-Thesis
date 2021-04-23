@@ -99,6 +99,14 @@ def exchange_cycle_adam_config(n: int, data_dir: str, learning_rate: float, batc
     return cfg
 
 
+def exchange_cycle_yogi_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
+    cfg = exchange_cycle_config(n, data_dir, learning_rate, batches, iterations)
+    cfg.optimizer = tfa.optimizers.Yogi
+#    cfg.optimizer = tf.optimizers.Adam
+    cfg.name += "-yogi"
+    return cfg
+
+
 def exchange_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
     return Config(
         N=n,
@@ -119,6 +127,22 @@ def exchange_config(n: int, data_dir: str, learning_rate: float, batches: float,
         optimizer=tf.optimizers.SGD,
         disable_tqdm=False,
     )
+
+
+def exchange_adam_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
+    cfg = exchange_config(n, data_dir, learning_rate, batches, iterations)
+#    cfg.optimizer = tfa.optimizers.Yogi
+    cfg.optimizer = tf.optimizers.Adam
+    cfg.name += "-adam"
+    return cfg
+
+
+def exchange_yogi_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
+    cfg = exchange_config(n, data_dir, learning_rate, batches, iterations)
+    cfg.optimizer = tfa.optimizers.Yogi
+#    cfg.optimizer = tf.optimizers.Adam
+    cfg.name += "-yogi"
+    return cfg
 
 
 def aggregate_hypercube_config(n: int, data_dir: str, learning_rate: float, batches: float, iterations: float):
