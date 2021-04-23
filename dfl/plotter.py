@@ -68,6 +68,10 @@ def plot_accuracy():
     accuracies = {}
     losses = {}
     for name, df in zip(names, dfs):
+        if args.filter is not None:
+            if name.find(args.filter) == -1:
+                print(f"{name} does not pass filter {args.filter}, skipping...")
+                continue
         grouped = df.groupby(["current_iteration"])
         max_iter = max(df.current_iteration)
         if args.max_iter is not None:
