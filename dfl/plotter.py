@@ -32,6 +32,19 @@ types = list(map(lambda x: x[:-4], files))
 print('read: ', [name for name in filter(lambda x: "-train" not in x and "-models" not in x, types)])
 
 
+def passes_filter(filter: str, name: str) -> bool:
+    if len(filter) == 0:
+        return True
+
+    if filter[len(filter)-1] == '$':
+        # Match needs to be at the end.
+        if len(name) < len(filter[:-1]):
+            return False
+        start = len(name) - len(filter) + 1
+        print(f'name: {name[start:]}, filter {filter[:-1]}')
+        return name[start:] == filter[:-1]
+
+
 def plot_stdouts():
     base = "data/stdouts"
     files = ["agg-hypercube.stdout", "exchange-cycle.stdout", "exchange-no-fail.stdout", "exchange.stdout", "none-gossip.stdout"]
@@ -69,7 +82,7 @@ def plot_accuracy():
     losses = {}
     for name, df in zip(names, dfs):
         if args.filter is not None:
-            if name.find(args.filter) == -1:
+            if not passes_filter(args.filter, name):
                 print(f"{name} does not pass filter {args.filter}, skipping...")
                 continue
         grouped = df.groupby(["current_iteration"])
@@ -120,7 +133,7 @@ def plot_models():
 
     for name, df in zip(names, dfs):
         if args.filter is not None:
-            if name.find(args.filter) == -1:
+            if not passes_filter(args.filter, name):
                 print(f"{name} does not pass filter {args.filter}, skipping...")
                 continue
         acs = df[df.current_iteration == int(at_iter)].filter(regex='loss').to_numpy()[0]
