@@ -105,6 +105,8 @@ def plot_accuracy():
     end_accuracies = {}
     for name, (i, accuracy, stds) in accuracies.items():
         #x = np.arange(accuracy.size)
+        if len(list(filter(lambda x: x > 0.2, accuracy))) == 0:
+            continue
         x = i
         sb.lineplot(y=accuracy, x=x, label=name)
         plt.fill_between(x, accuracy-stds, accuracy+stds, alpha=0.3)
