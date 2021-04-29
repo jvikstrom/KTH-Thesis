@@ -44,6 +44,8 @@ def passes_filter(filter: str, name: str) -> bool:
         print(f'name: {name[start:]}, filter {filter[:-1]}')
         return name[start:] == filter[:-1]
 
+    return name.find(filter) != -1
+
 
 def plot_stdouts():
     base = "data/stdouts"
