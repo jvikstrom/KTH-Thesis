@@ -100,8 +100,8 @@ def main(n: int, iterations: int):
     plt.plot(n_alive_at_iter)
     plt.show()
     file_name = prefix + str(n) + "-" + str(iterations) + ".json"
-#    with open(file_name, "w+") as f:
-#        f.write(json.dumps({"segments": segments}))
+    with open(file_name, "w+") as f:
+        f.write(json.dumps({"segments": segments}))
     print(f'Saved churn file at path: {file_name}')
 
 
