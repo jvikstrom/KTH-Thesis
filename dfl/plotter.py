@@ -106,7 +106,6 @@ def plot_accuracy():
         max_iter = int(args.max_iter)
     end_accuracies = {}
     for name, (i, accuracy, stds) in accuracies.items():
-        #x = np.arange(accuracy.size)
         if len(list(filter(lambda x: x > 0.2, accuracy))) == 0:
             continue
         x = i
@@ -127,26 +126,32 @@ def plot_accuracy():
 
 
 def plot_models():
-    at_iter = args.iter
     names = [name for name in filter(lambda x: "-models" in x, types)]
     dfs = [read(directory, name + ".csv") for name in names]
-    accuracies = {}
-    xs = {}
-    plt.ylabel("N models")
-    plt.xlabel("Accuracy")
+    plt.figure(figsize=(10, 10))
 
+    plt.ylabel("Loss")
+    plt.xlabel("Epoch")
+
+    datas = []
     for name, df in zip(names, dfs):
         if args.filter is not None:
             if not passes_filter(args.filter, name):
                 print(f"{name} does not pass filter {args.filter}, skipping...")
                 continue
-        acs = df[df.current_iteration == int(at_iter)].filter(regex='loss').to_numpy()[0]
-        accuracies[name] = acs
-        xs[name] = list(range(len(acs)))
+        acs = df.filter(regex='loss').to_numpy()
+        means = np.array([np.mean(ac) for ac in acs])
+        stds = np.array([np.std(ac) for ac in acs])
+        iters = df.current_iteration.to_numpy()
+        datas.append((name, iters, means, stds))
+        print(acs)
+        print(iters)
+        print(len(acs), len(iters))
+        print(f"means: {means}\nstds: {stds}")
 
-    for key in xs.keys():
-        y = accuracies[key]
-        plt.hist(y)
+    for name, x, y, stds in datas:
+        sb.lineplot(x=x, y=y, label=name)
+        plt.fill_between(x, y-stds, y+stds, alpha=0.3)
 
 
 if __name__ == "__main__":
