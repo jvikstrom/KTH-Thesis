@@ -65,10 +65,17 @@ class HamiltonCycleGuider(Guider):
         Guider.__init__(self, clients)
         self.round = [0 for _ in self.all_clients]
 
-    def next(self, clients, client_idx: int) -> int:
+    def next(self, clients, index_idx: int) -> int:
+        if len(clients) == 1:
+            return -1
+        client_idx = clients[index_idx]
         if self.round[client_idx] % 2 == client_idx % 2:
             add = 1
         else:
             add = -1
+        nxt_idx = (index_idx + add) % len(clients)
+        nxt = clients[nxt_idx]
         self.round[client_idx] += 1
-        return (client_idx + add) % len(clients)
+        self.round[nxt] += 1
+        #print(f"Client {client_idx} to {nxt}: {self.round[client_idx]}, {add} avail: {clients}")
+        return nxt_idx

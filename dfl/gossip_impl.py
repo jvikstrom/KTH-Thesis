@@ -115,11 +115,12 @@ class ExchangeGossip(Trainer):
                     exchange_pair = (nxt_idx, client_idx)
                 if exchange_pair not in exchanged:
                     exchanged.append(exchange_pair)
-                # Make sure each node only ever exchanges with one other node.
-                #print(f"Pop {client_idx} and {nxt}")
                 indexes.remove(client_idx)
                 indexes.remove(nxt_idx)
 
+                # Make sure each node only ever exchanges with one other node.
+                #print(f"Pop {client_idx} and {nxt}")
+            print(f"Exchange: {exchanged}")
             #print(f"Exchanged: {exchanged}")
             # Do the actual exchanges.
             model_weights = [client.model.get_weights() for client in self.clients]
