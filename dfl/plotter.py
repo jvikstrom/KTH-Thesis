@@ -10,6 +10,8 @@ import re
 parser = argparse.ArgumentParser(description="Plot the data")
 parser.add_argument("--train", dest="plot_train", action="store_const", const=True, default=False, help="Plot the training accuracy")
 parser.add_argument("--models", dest="models", action="store_const", const=True, default=False, help="Plot the model losses")
+parser.add_argument("--plot-max-min", dest="plot_max_min", action="store_const", const=True, default=False, help="Plot the max and min model losses")
+parser.add_argument("--loss-regex", dest="loss_regex", default='loss', help="Regex to use when looking for loss")
 parser.add_argument("--iter", dest="iter", help="What iter to print model accuracies at")
 parser.add_argument("--max-iter", dest="max_iter")
 parser.add_argument("--title", dest="title", default="")
@@ -30,6 +32,39 @@ files = os.listdir(directory)
 types = list(map(lambda x: x[:-4], files))
 
 print('read: ', [name for name in filter(lambda x: "-train" not in x and "-models" not in x, types)])
+
+
+color_map = {
+    'fls': 'red',
+    'centralized-yogi': 'purple',
+    'none-gossip': 'orange',
+    'average-gossip': '#3b67c4', # Lightblue/blue color
+    'exchange-gossip': 'gray',
+    'exchange-gossip-yogi': 'brown',
+    'exchange-gossip-adam': 'black',
+    'exchange-cycle': 'green',
+    'exchange-cycle-yogi': '#1FAA06', # Lime
+    'exchange-cycle-adam': 'darkgreen',
+}
+
+
+def get_color(l):
+    if l in color_map:
+        return color_map[l]
+    raise AssertionError(f"Color does not exist for label {l}")
+
+
+label_transform = {
+    'exchange-gossip': 'exchange',
+    'exchange-gossip-adam': 'exchange-adam',
+    'exchange-gossip-yogi': 'exchange-yogi',
+}
+
+
+def transform_label(l):
+    if l in label_transform:
+        return label_transform[l]
+    return l
 
 
 def passes_filter(filter: str, name: str) -> bool:
@@ -109,8 +144,8 @@ def plot_accuracy():
         if len(list(filter(lambda x: x > 0.2, accuracy))) == 0:
             continue
         x = i
-        sb.lineplot(y=accuracy, x=x, label=name)
-        plt.fill_between(x, accuracy-stds, accuracy+stds, alpha=0.3)
+        sb.lineplot(y=accuracy, x=x, label=transform_label(name), color=get_color(name))
+        plt.fill_between(x, accuracy-stds, accuracy+stds, alpha=0.3, color=get_color(name))
         accum = 0.0
         t = 0
         for j, ac in zip(i, accuracy):
@@ -139,18 +174,24 @@ def plot_models():
             if not passes_filter(args.filter, name):
                 print(f"{name} does not pass filter {args.filter}, skipping...")
                 continue
-        acs = df.filter(regex='loss').to_numpy()
+        acs = df.filter(regex=args.loss_regex).to_numpy()
         means = np.array([np.mean(ac) for ac in acs])
         stds = np.array([np.std(ac) for ac in acs])
+        mins = np.array([np.min(ac) for ac in acs])
+        maxs = np.array([np.max(ac) for ac in acs])
+
         iters = df.current_iteration.to_numpy()
-        datas.append((name, iters, means, stds))
+        datas.append((name, iters, means, stds, mins, maxs))
         print(acs)
         print(iters)
         print(len(acs), len(iters))
         print(f"means: {means}\nstds: {stds}")
 
-    for name, x, y, stds in datas:
-        sb.lineplot(x=x, y=y, label=name)
+    for name, x, y, stds, mins, maxs in datas:
+        sb.lineplot(x=x, y=y, label=transform_label(name), color=get_color(name))
+        if args.plot_max_min:
+            sb.lineplot(x=x, y=mins, label=transform_label(name), color=get_color(name))
+            sb.lineplot(x=x, y=maxs, label=transform_label(name), color=get_color(name))
         plt.fill_between(x, y-stds, y+stds, alpha=0.3)
 
 
