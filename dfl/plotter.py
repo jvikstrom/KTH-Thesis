@@ -159,6 +159,9 @@ def plot_accuracy():
     print(end_accuracies)
 # Plot contains the mean accuracy of the node's models. Each model
 
+def model_name_cut(name: str):
+    return name[:-len("-0-models")]
+
 
 def plot_models():
     names = [name for name in filter(lambda x: "-models" in x, types)]
@@ -187,12 +190,34 @@ def plot_models():
         print(len(acs), len(iters))
         print(f"means: {means}\nstds: {stds}")
 
-    for name, x, y, stds, mins, maxs in datas:
-        sb.lineplot(x=x, y=y, label=transform_label(name), color=get_color(name))
-        if args.plot_max_min:
-            sb.lineplot(x=x, y=mins, label=transform_label(name), color=get_color(name))
-            sb.lineplot(x=x, y=maxs, label=transform_label(name), color=get_color(name))
-        plt.fill_between(x, y-stds, y+stds, alpha=0.3)
+    grouped_data = {}
+    for (name, iters, means, stds, mins, maxs) in datas:
+        if name not in grouped_data:
+            grouped_data[model_name_cut(name)] = (model_name_cut(name), iters, means, stds, mins, maxs, 1)
+        else:
+            o_name, o_iters, o_means, o_stds, o_mins, o_maxs, count = grouped_data[model_name_cut(name)]
+            if len(o_iters) > len(iters):
+                o_name, name = o_name, name
+                o_iters, iters = iters, o_iters
+                o_means, means = means, count * o_means
+                o_stds, stds = stds, count * o_stds
+                o_mins, mins = mins, o_mins
+                o_maxs, maxs = maxs, o_maxs
+            for i in range(len(o_iters)):
+                means[i] = (means[i] + o_means[i]) / (count + 1.0)
+                stds[i] = (stds[i] + o_stds[i]) / (count + 1.0)
+                mins[i] = min(mins[i], o_mins[i])
+                maxs[i] = max(maxs[i], o_maxs[i])
+
+            grouped_data[model_name_cut(name)] = (name, iters, means, stds, mins, maxs, count + 1.0)
+
+    for name, x, y, stds, mins, maxs, count in grouped_data.values():
+        sb.lineplot(x=x, y=y, label=transform_label(name))#, color=get_color(name))
+        #if args.plot_max_min:
+        #    sb.lineplot(x=x, y=mins, label=transform_label(name), color=get_color(name))
+        #    sb.lineplot(x=x, y=maxs, label=transform_label(name), color=get_color(name))
+        #plt.fill_between(x, y-stds, y+stds, alpha=0.3)
+        plt.fill_between(x, mins, maxs, alpha=0.3)#, color=get_color(name))
 
 
 if __name__ == "__main__":
