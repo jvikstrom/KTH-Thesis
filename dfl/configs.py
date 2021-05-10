@@ -7,7 +7,7 @@ from dataset import load_from_emnist, concat_data
 from client import Guider
 from hypercube import Hypercube, HamiltonCycleGuider, HypercubeConfig
 from gossip_impl import Gossip, ExchangeGossip, GossipConfig, BaseGossipConfig, ExchangeConfig
-from centralized import Centralized
+from centralized import Centralized, RandomExchange, CyclicExchange
 from fls import FLS, FLSConfig
 from pydantic import BaseModel
 from typing import Any, Callable
@@ -76,6 +76,8 @@ def exchange_cycle_config(n: int, data_dir: str, learning_rate: float, batches: 
         data_dir=data_dir,
         name="exchange-cycle",
         extra_config=ExchangeConfig(
+            batches=batches,
+            iterations=iterations,
             base_config=BaseGossipConfig(
                 trainer_config=TrainerConfig(
                     batches=batches,
@@ -85,7 +87,7 @@ def exchange_cycle_config(n: int, data_dir: str, learning_rate: float, batches: 
             ),
             swap_optimizer=True,
         ),
-        strategy=ExchangeGossip,
+        strategy=CyclicExchange, #TODO: ExchangeGossip for churn
         optimizer=tf.optimizers.SGD,
         disable_tqdm=False,
     )
@@ -114,6 +116,8 @@ def exchange_config(n: int, data_dir: str, learning_rate: float, batches: float,
         data_dir=data_dir,
         name="exchange-gossip",
         extra_config=ExchangeConfig(
+            batches=batches,
+            iterations=iterations,
             base_config=BaseGossipConfig(
                 trainer_config=TrainerConfig(
                     batches=batches,
@@ -123,7 +127,7 @@ def exchange_config(n: int, data_dir: str, learning_rate: float, batches: float,
             ),
             swap_optimizer=False,
         ),
-        strategy=ExchangeGossip,
+        strategy=RandomExchange, #TODO: ExchangeGossip for churn,
         optimizer=tf.optimizers.SGD,
         disable_tqdm=False,
     )

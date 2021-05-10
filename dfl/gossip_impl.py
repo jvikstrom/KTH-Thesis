@@ -89,7 +89,8 @@ class ExchangeConfig(BaseModel):
     base_config: BaseGossipConfig
     # TODO: Use this for setting optimizers as well.
     swap_optimizer: bool
-
+    iterations: int
+    batches: int
 
 class ExchangeGossip(Trainer):
     def __init__(self, trainer_input, clients: List[Client], cfg: ExchangeConfig, all_train, all_test):

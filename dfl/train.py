@@ -12,7 +12,6 @@ import storage
 from datetime import datetime
 import random
 
-
 class TrainerConfig(BaseModel):
     batches: int
     iterations: int
@@ -34,6 +33,9 @@ class Trainer:
                  all_train_data, all_test_data):
         self.name = trainer_input.name
         self.version = trainer_input.version
+        add_version = os.getenv("ADD_VERSION")
+        if add_version is not None:
+            self.version = self.version + int(add_version)
         self.data_dir = trainer_input.data_dir
         self.eval_test_gap = trainer_input.eval_test_gap
         self.eval_train_gap = trainer_input.eval_train_gap

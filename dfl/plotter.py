@@ -36,6 +36,7 @@ print('read: ', [name for name in filter(lambda x: "-train" not in x and "-model
 
 color_map = {
     'fls': 'red',
+    'centralized': 'pink',
     'centralized-yogi': 'purple',
     'none-gossip': 'orange',
     'average-gossip': '#3b67c4', # Lightblue/blue color
@@ -51,7 +52,10 @@ color_map = {
 def get_color(l):
     if l in color_map:
         return color_map[l]
-    raise AssertionError(f"Color does not exist for label {l}")
+    if l.replace('-train', '') in color_map:
+        return color_map[l.replace('-train', '')]
+    return None
+#    raise AssertionError(f"Color does not exist for label {l}")
 
 
 label_transform = {
@@ -144,7 +148,9 @@ def plot_accuracy():
         if len(list(filter(lambda x: x > 0.2, accuracy))) == 0:
             continue
         x = i
-        sb.lineplot(y=accuracy, x=x, label=transform_label(name), color=get_color(name))
+        sb.lineplot(x=x, y=accuracy, label=transform_label(name), color=get_color(name))#, color=get_color(name))
+
+#        sb.lineplot(y=accuracy, x=x, label=transform_label(name), color=get_color(name))
         plt.fill_between(x, accuracy-stds, accuracy+stds, alpha=0.3, color=get_color(name))
         accum = 0.0
         t = 0
@@ -212,7 +218,7 @@ def plot_models():
             grouped_data[model_name_cut(name)] = (name, iters, means, stds, mins, maxs, count + 1.0)
 
     for name, x, y, stds, mins, maxs, count in grouped_data.values():
-        sb.lineplot(x=x, y=y, label=transform_label(name))#, color=get_color(name))
+        sb.lineplot(x=x, y=y, label=transform_label(name))
         #if args.plot_max_min:
         #    sb.lineplot(x=x, y=mins, label=transform_label(name), color=get_color(name))
         #    sb.lineplot(x=x, y=maxs, label=transform_label(name), color=get_color(name))
