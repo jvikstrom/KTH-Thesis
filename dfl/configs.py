@@ -87,7 +87,7 @@ def exchange_cycle_config(n: int, data_dir: str, learning_rate: float, batches: 
             ),
             swap_optimizer=True,
         ),
-        strategy=CyclicExchange, #TODO: ExchangeGossip for churn
+        strategy=ExchangeGossip,#CyclicExchange, #TODO: ExchangeGossip for churn
         optimizer=tf.optimizers.SGD,
         disable_tqdm=False,
     )
@@ -127,7 +127,7 @@ def exchange_config(n: int, data_dir: str, learning_rate: float, batches: float,
             ),
             swap_optimizer=False,
         ),
-        strategy=RandomExchange, #TODO: ExchangeGossip for churn,
+        strategy=ExchangeGossip,#RandomExchange, #TODO: ExchangeGossip for churn,
         optimizer=tf.optimizers.SGD,
         disable_tqdm=False,
     )

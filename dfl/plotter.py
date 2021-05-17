@@ -10,6 +10,7 @@ import re
 parser = argparse.ArgumentParser(description="Plot the data")
 parser.add_argument("--train", dest="plot_train", action="store_const", const=True, default=False, help="Plot the training accuracy")
 parser.add_argument("--models", dest="models", action="store_const", const=True, default=False, help="Plot the model losses")
+parser.add_argument('--no-ignored', dest='no_ignore', action='store_const', const=True, default=False, help='If we should ignore worse variants')
 parser.add_argument("--plot-max-min", dest="plot_max_min", action="store_const", const=True, default=False, help="Plot the max and min model losses")
 parser.add_argument("--loss-regex", dest="loss_regex", default='loss', help="Regex to use when looking for loss")
 parser.add_argument("--iter", dest="iter", help="What iter to print model accuracies at")
@@ -63,6 +64,25 @@ label_transform = {
     'exchange-gossip-adam': 'exchange-adam',
     'exchange-gossip-yogi': 'exchange-yogi',
 }
+
+
+included_methods = [
+    'centralized-yogi',
+    'exchange-yogi',
+    'exchange-cycle-yogi',
+    'none-gossip',
+    'average-gossip',
+    'fls',
+]
+
+def should_include(l: str):
+    if args.no_ignore:
+        return True
+    if len(included_methods) == 0:
+        return True
+    if transform_label(l) in included_methods:
+        return True
+    return False
 
 
 def transform_label(l):
@@ -136,7 +156,7 @@ def plot_accuracy():
         accuracies[name] = (grouped["current_iteration"].mean().to_numpy(), accuracy_means.to_numpy(), grouped['accuracy'].std().to_numpy())
         losses[name] = loss_means.to_numpy()
 
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(7, 7))
     plt.xlabel("Epochs")
     plt.ylabel("Accuracy")
     plt.title(args.title)
@@ -147,11 +167,13 @@ def plot_accuracy():
     for name, (i, accuracy, stds) in accuracies.items():
         if len(list(filter(lambda x: x > 0.2, accuracy))) == 0:
             continue
+        if not should_include(name):
+            continue
         x = i
         sb.lineplot(x=x, y=accuracy, label=transform_label(name), color=get_color(name))#, color=get_color(name))
 
 #        sb.lineplot(y=accuracy, x=x, label=transform_label(name), color=get_color(name))
-        plt.fill_between(x, accuracy-stds, accuracy+stds, alpha=0.3, color=get_color(name))
+        #plt.fill_between(x, accuracy-stds, accuracy+stds, alpha=0.3, color=get_color(name))
         accum = 0.0
         t = 0
         for j, ac in zip(i, accuracy):
@@ -232,6 +254,6 @@ if __name__ == "__main__":
     else:
         plot_models()
     plt.legend()
-    plt.savefig("plot.png", bbox_inches='tight')
+    plt.savefig("plot.pdf", bbox_inches='tight')
     plt.show()
 
